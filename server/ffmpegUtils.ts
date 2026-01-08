@@ -1,0 +1,27 @@
+
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from 'ffmpeg-static';
+import path from 'path';
+import fs from 'fs';
+
+if (ffmpegInstaller) {
+    ffmpeg.setFfmpegPath(ffmpegInstaller);
+}
+
+export const extractClip = (inputPath: string, outputPath: string, start: string, duration: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+            .setStartTime(start)
+            .setDuration(duration)
+            .output(outputPath)
+            .on('end', () => {
+                console.log(`[FFMPEG] Extraction complete: ${outputPath}`);
+                resolve(outputPath);
+            })
+            .on('error', (err) => {
+                console.error(`[FFMPEG] Extraction failed: ${err.message}`);
+                reject(err);
+            })
+            .run();
+    });
+};

@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NativeCodeX - Advanced Gaming Platform</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#00ff00',secondary:'#0a0a0a'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+background-color: #0a0a0a;
+color: #ffffff;
+}
+.hero-gradient {
+background: linear-gradient(90deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0.8) 50%, rgba(10,10,10,0) 100%);
+}
+.game-card {
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.game-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 25px -5px rgba(0, 255, 0, 0.3);
+}
+.neon-border {
+box-shadow: 0 0 5px rgba(0, 255, 0, 0.5), 0 0 10px rgba(0, 255, 0, 0.3), 0 0 15px rgba(0, 255, 0, 0.1);
+}
+.neon-text {
+text-shadow: 0 0 5px rgba(0, 255, 0, 0.7), 0 0 10px rgba(0, 255, 0, 0.5);
+}
+.custom-scrollbar::-webkit-scrollbar {
+width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+background: #1a1a1a;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+background: #00ff00;
+border-radius: 10px;
+}
+.orbitron {
+font-family: 'Orbitron', sans-serif;
+}
+</style>
+</head>
+<body class="min-h-screen relative">
+<!-- Live Streams Side Nav -->
+<div class="fixed right-0 top-1/2 -translate-y-1/2 z-40 w-3 hover:w-64 group transition-all duration-300 overflow-hidden bg-secondary/95 rounded-l-xl border-l border-y border-primary/20">
+<div class="w-64 p-4">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-sm font-bold flex items-center gap-2">
+<i class="ri-live-line text-red-500"></i> Live Now
+</h3>
+<span class="text-xs text-gray-400">12 Streams</span>
+</div>
+<div class="space-y-3">
+<!-- Stream Item -->
+<div class="flex items-center gap-3 p-2 hover:bg-primary/5 rounded-lg cursor-pointer stream-item">
+<div class="relative">
+<div class="w-8 h-8 rounded-full border-2 border-primary overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20professional%20male%20gamer%20streaming%2C%20focused%20expression%2C%20gaming%20headset%2C%20dark%20background&width=100&height=100&seq=side1&orientation=squarish" class="w-full h-full object-cover object-top" alt="Streamer">
+</div>
+<div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-medium truncate">MaxFirePower</h4>
+<p class="text-xs text-gray-400 truncate">Global Elite Championship</p>
+</div>
+<div class="text-xs text-gray-400">12.4K</div>
+</div>
+<!-- Stream Item -->
+<div class="flex items-center gap-3 p-2 hover:bg-primary/5 rounded-lg cursor-pointer stream-item">
+<div class="relative">
+<div class="w-8 h-8 rounded-full border-2 border-primary overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20female%20streamer%2C%20gaming%20headset%2C%20smiling%2C%20professional%20lighting%2C%20dark%20background&width=100&height=100&seq=side2&orientation=squarish" class="w-full h-full object-cover object-top" alt="Streamer">
+</div>
+<div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-medium truncate">QueenOfBattles</h4>
+<p class="text-xs text-gray-400 truncate">Battle Royale Masters</p>
+</div>
+<div class="text-xs text-gray-400">8.7K</div>
+</div>
+<!-- Stream Item -->
+<div class="flex items-center gap-3 p-2 hover:bg-primary/5 rounded-lg cursor-pointer stream-item">
+<div class="relative">
+<div class="w-8 h-8 rounded-full border-2 border-primary overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20professional%20male%20streamer%2C%20asian%20ethnicity%2C%20gaming%20headset%2C%20serious%20expression%2C%20dark%20background&width=100&height=100&seq=side3&orientation=squarish" class="w-full h-full object-cover object-top" alt="Streamer">
+</div>
+<div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="text-sm font-medium truncate">NinjaWarrior</h4>
+<p class="text-xs text-gray-400 truncate">Tactical Ops Tournament</p>
+</div>
+<div class="text-xs text-gray-400">6.2K</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-primary/20">
+<div class="container mx-auto px-4 py-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<a href="#" class="font-['Pacifico'] text-primary text-3xl">Native</a>
+<div class="hidden md:flex items-center space-x-6 ml-10">
+<a href="#" class="text-white hover:text-primary transition-colors text-sm font-medium">Home</a>
+<a href="#" class="text-white hover:text-primary transition-colors text-sm font-medium">Tournaments</a>
+<a href="#" class="text-white hover:text-primary transition-colors text-sm font-medium">Streams</a>
+<a href="#" class="text-white hover:text-primary transition-colors text-sm font-medium">Leaderboard</a>
+<a href="#" class="text-white hover:text-primary transition-colors text-sm font-medium">Store</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<input type="text" placeholder="Search games, tournaments..." class="bg-secondary/60 text-white text-sm px-4 py-2 pr-10 rounded-button w-64 border-none focus:outline-none focus:ring-2 focus:ring-primary/50">
+<div class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-button text-sm font-medium transition-colors whitespace-nowrap !rounded-button">Sign In</button>
+<button class="bg-primary text-black px-4 py-2 rounded-button text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap !rounded-button">Sign Up</button>
+<button class="md:hidden flex items-center justify-center w-10 h-10 text-white">
+<i class="ri-menu-line ri-lg"></i>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="relative pt-24 overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div style="background-image: url('https://readdy.ai/api/search-image?query=futuristic%20gaming%20setup%20with%20neon%20green%20lights%2C%20gaming%20peripherals%2C%20multiple%20monitors%20displaying%20competitive%20esports%20games%2C%20dark%20atmosphere%20with%20glowing%20elements%2C%20high-tech%20environment%2C%20ultra-realistic%203D%20rendering%2C%20cinematic%20lighting%2C%20no%20people&width=1920&height=1080&seq=hero1&orientation=landscape');" class="w-full h-full bg-cover bg-center"></div>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="container mx-auto px-4 py-20 relative z-10">
+<div class="flex flex-col md:flex-row items-center">
+<div class="md:w-1/2 mb-10 md:mb-0">
+<h1 class="text-4xl md:text-6xl font-bold mb-6 orbitron">
+<span class="text-white">The Next Gen</span><br>
+<span class="text-primary neon-text">Gaming Platform</span>
+</h1>
+<p class="text-gray-300 text-lg mb-8 max-w-xl">Experience gaming like never before with advanced 3D visuals, real-time tournaments, and a vibrant community. Join thousands of gamers competing for glory and prizes.</p>
+<div class="flex flex-wrap gap-4">
+<a href="https://readdy.ai/home/94440f14-ef79-4368-8e88-5eedd47833b8/4691d890-dc52-4bd1-ac22-6c84c9a38783" data-readdy="true">
+<button class="bg-primary text-black px-6 py-3 rounded-button font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap !rounded-button">
+<i class="ri-gamepad-line"></i> Get Started
+</button>
+</a>
+<button class="bg-white/10 backdrop-blur-sm text-white border border-white/20 px-6 py-3 rounded-button font-medium hover:bg-white/20 transition-colors flex items-center gap-2 whitespace-nowrap !rounded-button">
+<i class="ri-play-circle-line"></i> Watch Demo
+</button>
+</div>
+<div class="mt-10 flex items-center gap-4">
+<div class="flex -space-x-2">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20professional%20gamer%2C%20male%2C%20serious%20expression%2C%20gaming%20headset%2C%20side%20profile%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=user1&orientation=squarish" class="w-10 h-10 rounded-full border-2 border-black object-cover object-top" alt="User">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20female%20professional%20gamer%2C%20confident%20expression%2C%20gaming%20headset%2C%20looking%20at%20camera%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=user2&orientation=squarish" class="w-10 h-10 rounded-full border-2 border-black object-cover object-top" alt="User">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20young%20male%20gamer%2C%20asian%20ethnicity%2C%20gaming%20headset%2C%20focused%20expression%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=user3&orientation=squarish" class="w-10 h-10 rounded-full border-2 border-black object-cover object-top" alt="User">
+</div>
+<p class="text-sm text-gray-400">Join <span class="text-primary font-medium">10,000+</span> gamers worldwide</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Tournaments -->
+<section class="py-20 bg-black">
+<div class="container mx-auto px-4">
+<div class="flex justify-between items-center mb-12">
+<h2 class="text-3xl font-bold orbitron">Featured <span class="text-primary">Tournaments</span></h2>
+<a href="#" class="text-primary flex items-center gap-1 hover:underline">
+View all tournaments <i class="ri-arrow-right-line"></i>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Tournament Card 1 -->
+<div class="game-card bg-secondary/30 rounded-lg overflow-hidden border border-primary/20 backdrop-blur-sm">
+<div class="relative h-48">
+<img src="https://readdy.ai/api/search-image?query=competitive%20first-person%20shooter%20game%20tournament%20scene%20with%20professional%20players%2C%20esports%20arena%20with%20large%20screens%20showing%20gameplay%2C%20dramatic%20lighting%2C%20audience%20in%20background%2C%20high-energy%20atmosphere&width=600&height=400&seq=tournament1&orientation=landscape" class="w-full h-full object-cover object-top" alt="Tournament">
+<div class="absolute top-3 right-3 bg-primary/90 text-black px-3 py-1 rounded-full text-xs font-medium">LIVE NOW</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+<div class="flex items-center gap-2 text-sm">
+<div class="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full">
+<i class="ri-user-line text-xs"></i>
+</div>
+<span>128 Players</span>
+<div class="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full ml-2">
+<i class="ri-trophy-line text-xs"></i>
+</div>
+<span>$50,000</span>
+</div>
+</div>
+</div>
+<div class="p-5">
+<h3 class="text-xl font-bold mb-2">Global Elite Showdown</h3>
+<p class="text-gray-400 text-sm mb-4">The ultimate test of skill and strategy for professional FPS players worldwide.</p>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full">
+<i class="ri-calendar-line text-primary"></i>
+</div>
+<span class="text-sm">June 15, 2025</span>
+</div>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-button text-sm font-medium transition-colors whitespace-nowrap !rounded-button">Register</button>
+</div>
+</div>
+</div>
+<!-- Tournament Card 2 -->
+<div class="game-card bg-secondary/30 rounded-lg overflow-hidden border border-primary/20 backdrop-blur-sm">
+<div class="relative h-48">
+<img src="https://readdy.ai/api/search-image?query=battle%20royale%20game%20tournament%20with%20colorful%20characters%2C%20futuristic%20arena%20with%20floating%20platforms%2C%20energy%20shields%2C%20holographic%20displays%20showing%20player%20stats%2C%20vibrant%20environment&width=600&height=400&seq=tournament2&orientation=landscape" class="w-full h-full object-cover object-top" alt="Tournament">
+<div class="absolute top-3 right-3 bg-gray-900/90 text-white px-3 py-1 rounded-full text-xs font-medium">UPCOMING</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+<div class="flex items-center gap-2 text-sm">
+<div class="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full">
+<i class="ri-user-line text-xs"></i>
+</div>
+<span>64 Teams</span>
+<div class="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full ml-2">
+<i class="ri-trophy-line text-xs"></i>
+</div>
+<span>$75,000</span>
+</div>
+</div>
+</div>
+<div class="p-5">
+<h3 class="text-xl font-bold mb-2">Battle Royale Masters</h3>
+<p class="text-gray-400 text-sm mb-4">Survive and conquer in this high-stakes battle royale tournament featuring top teams.</p>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full">
+<i class="ri-calendar-line text-primary"></i>
+</div>
+<span class="text-sm">July 8, 2025</span>
+</div>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-button text-sm font-medium transition-colors whitespace-nowrap !rounded-button">Register</button>
+</div>
+</div>
+</div>
+<!-- Tournament Card 3 -->
+<div class="game-card bg-secondary/30 rounded-lg overflow-hidden border border-primary/20 backdrop-blur-sm">
+<div class="relative h-48">
+<img src="https://readdy.ai/api/search-image?query=strategy%20game%20tournament%20with%20detailed%20miniature%20battlefield%2C%20holographic%20units%2C%20players%20concentrating%20at%20gaming%20stations%2C%20spectators%20watching%20large%20overhead%20displays%2C%20professional%20gaming%20environment&width=600&height=400&seq=tournament3&orientation=landscape" class="w-full h-full object-cover object-top" alt="Tournament">
+<div class="absolute top-3 right-3 bg-gray-900/90 text-white px-3 py-1 rounded-full text-xs font-medium">REGISTRATION OPEN</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+<div class="flex items-center gap-2 text-sm">
+<div class="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full">
+<i class="ri-user-line text-xs"></i>
+</div>
+<span>32 Players</span>
+<div class="w-6 h-6 flex items-center justify-center bg-white/10 rounded-full ml-2">
+<i class="ri-trophy-line text-xs"></i>
+</div>
+<span>$25,000</span>
+</div>
+</div>
+</div>
+<div class="p-5">
+<h3 class="text-xl font-bold mb-2">Strategy Masters League</h3>
+<p class="text-gray-400 text-sm mb-4">Test your tactical genius in this premier strategy game championship.</p>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-full">
+<i class="ri-calendar-line text-primary"></i>
+</div>
+<span class="text-sm">August 20, 2025</span>
+</div>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-button text-sm font-medium transition-colors whitespace-nowrap !rounded-button">Register</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3D Showcase Section -->
+<section class="py-20 bg-gradient-to-b from-black to-secondary/30">
+<div class="container mx-auto px-4">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold mb-4 orbitron">Advanced <span class="text-primary neon-text">3D Visuals</span></h2>
+<p class="text-gray-400 max-w-2xl mx-auto">Experience gaming like never before with our cutting-edge 3D visualization technology. Immerse yourself in stunning environments and realistic gameplay.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+<div class="relative rounded-lg overflow-hidden h-80 md:h-96 neon-border">
+<img src="https://readdy.ai/api/search-image?query=futuristic%203D%20gaming%20visualization%20with%20holographic%20interface%2C%20player%20avatar%20customization%20screen%2C%20neon%20green%20accents%2C%20floating%20UI%20elements%2C%20dark%20background%20with%20glowing%20elements%2C%20high-tech%20gaming%20environment&width=800&height=600&seq=3d1&orientation=landscape" class="w-full h-full object-cover object-top" alt="3D Visualization">
+<div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+<div class="absolute bottom-0 left-0 right-0 p-6">
+<h3 class="text-xl font-bold mb-2">Avatar Customization</h3>
+<p class="text-gray-300 text-sm">Create your unique identity with our advanced 3D avatar system</p>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full text-primary">
+<i class="ri-vr-line ri-xl"></i>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-2">Immersive Environments</h3>
+<p class="text-gray-400">Step into fully realized 3D worlds with dynamic lighting and physics. Experience tournaments in stunning virtual arenas designed for maximum immersion.</p>
+</div>
+</div>
+</div>
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full text-primary">
+<i class="ri-trophy-line ri-xl"></i>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-2">Interactive Trophies</h3>
+<p class="text-gray-400">Showcase your achievements with interactive 3D trophies. Rotate, zoom, and admire your hard-earned rewards in stunning detail.</p>
+</div>
+</div>
+</div>
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full text-primary">
+<i class="ri-gamepad-line ri-xl"></i>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-2">Game Integration</h3>
+<p class="text-gray-400">Seamless integration with your favorite games. View real-time 3D models of in-game items, characters, and environments.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Live Streams Section -->
+<section class="py-20 bg-black">
+<div class="container mx-auto px-4">
+<div class="flex justify-between items-center mb-12">
+<h2 class="text-3xl font-bold orbitron">Live <span class="text-primary">Streams</span></h2>
+<a href="#" class="text-primary flex items-center gap-1 hover:underline">
+View all streams <i class="ri-arrow-right-line"></i>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Stream Card 1 -->
+<div class="game-card bg-secondary/30 rounded-lg overflow-hidden border border-primary/20">
+<div class="relative h-48">
+<img src="https://readdy.ai/api/search-image?query=professional%20gamer%20streaming%20first-person%20shooter%20game%2C%20focused%20expression%2C%20gaming%20setup%20with%20multiple%20monitors%2C%20RGB%20lighting%2C%20webcam%20view%20in%20corner%2C%20chat%20overlay%2C%20high-quality%20stream&width=600&height=400&seq=stream1&orientation=landscape" class="w-full h-full object-cover object-top" alt="Stream">
+<div class="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+<i class="ri-live-line"></i> LIVE
+</div>
+<div class="absolute top-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-medium">
+12.4K viewers
+</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+<div class="flex items-center gap-2">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20professional%20male%20streamer%2C%20gaming%20headset%2C%20confident%20smile%2C%20well-lit%20face%2C%20dark%20background&width=100&height=100&seq=streamer1&orientation=squarish" class="w-10 h-10 rounded-full border-2 border-primary object-cover object-top" alt="Streamer">
+<div>
+<h3 class="font-bold text-white">MaxFirePower</h3>
+<p class="text-xs text-gray-300">Global Elite Championship</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold mb-1">Road to Championship Finals!</h3>
+<p class="text-gray-400 text-sm mb-3">Practicing with the team before tomorrow's big tournament.</p>
+<div class="flex gap-2">
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">FPS</span>
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Competitive</span>
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Team</span>
+</div>
+</div>
+</div>
+<!-- Stream Card 2 -->
+<div class="game-card bg-secondary/30 rounded-lg overflow-hidden border border-primary/20">
+<div class="relative h-48">
+<img src="https://readdy.ai/api/search-image?query=female%20gamer%20streaming%20battle%20royale%20game%2C%20engaging%20with%20chat%2C%20professional%20streaming%20setup%2C%20colorful%20lighting%2C%20gameplay%20on%20screen%2C%20webcam%20overlay%2C%20stream%20overlay%20with%20subscriber%20notifications&width=600&height=400&seq=stream2&orientation=landscape" class="w-full h-full object-cover object-top" alt="Stream">
+<div class="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+<i class="ri-live-line"></i> LIVE
+</div>
+<div class="absolute top-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-medium">
+8.7K viewers
+</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+<div class="flex items-center gap-2">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20female%20streamer%2C%20gaming%20headset%2C%20smiling%2C%20professional%20lighting%2C%20dark%20background&width=100&height=100&seq=streamer2&orientation=squarish" class="w-10 h-10 rounded-full border-2 border-primary object-cover object-top" alt="Streamer">
+<div>
+<h3 class="font-bold text-white">QueenOfBattles</h3>
+<p class="text-xs text-gray-300">Battle Royale Masters</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold mb-1">Solo Queue Grind - Top 10 Today!</h3>
+<p class="text-gray-400 text-sm mb-3">Pushing for leaderboard position before the tournament.</p>
+<div class="flex gap-2">
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Battle Royale</span>
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Solo</span>
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Ranked</span>
+</div>
+</div>
+</div>
+<!-- Stream Card 3 -->
+<div class="game-card bg-secondary/30 rounded-lg overflow-hidden border border-primary/20">
+<div class="relative h-48">
+<img src="https://readdy.ai/api/search-image?query=strategy%20game%20tournament%20stream%2C%20overhead%20view%20of%20complex%20game%20map%2C%20commentators%20analyzing%20gameplay%2C%20professional%20production%20with%20multiple%20camera%20angles%2C%20statistics%20overlay%2C%20esports%20broadcast&width=600&height=400&seq=stream3&orientation=landscape" class="w-full h-full object-cover object-top" alt="Stream">
+<div class="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+<i class="ri-live-line"></i> LIVE
+</div>
+<div class="absolute top-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-medium">
+5.2K viewers
+</div>
+<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center">
+<i class="ri-broadcast-line text-primary"></i>
+</div>
+<div>
+<h3 class="font-bold text-white">Official Tournament</h3>
+<p class="text-xs text-gray-300">Strategy Masters League</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold mb-1">Semifinals - StratMaster vs TacticKings</h3>
+<p class="text-gray-400 text-sm mb-3">Official broadcast of the Strategy Masters League semifinals.</p>
+<div class="flex gap-2">
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Strategy</span>
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Tournament</span>
+<span class="bg-secondary text-white text-xs px-3 py-1 rounded-full">Official</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Leaderboard Section -->
+<section class="py-20 bg-gradient-to-b from-black to-secondary/30">
+<div class="container mx-auto px-4">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold mb-4 orbitron">Global <span class="text-primary neon-text">Leaderboard</span></h2>
+<p class="text-gray-400 max-w-2xl mx-auto">Track the performance of top players across all tournaments and games. Compete for glory and recognition in our global rankings.</p>
+</div>
+<div class="bg-secondary/30 rounded-lg border border-primary/20 overflow-hidden max-w-4xl mx-auto">
+<div class="p-4 bg-secondary/50 border-b border-primary/20 flex justify-between items-center">
+<h3 class="font-bold">Top Players This Season</h3>
+<div class="flex gap-2">
+<button class="bg-secondary text-white text-xs px-3 py-1 rounded-full active:bg-primary active:text-black whitespace-nowrap !rounded-button">All Games</button>
+<button class="bg-secondary text-white text-xs px-3 py-1 rounded-full whitespace-nowrap !rounded-button">FPS</button>
+<button class="bg-secondary text-white text-xs px-3 py-1 rounded-full whitespace-nowrap !rounded-button">Battle Royale</button>
+<button class="bg-secondary text-white text-xs px-3 py-1 rounded-full whitespace-nowrap !rounded-button">Strategy</button>
+</div>
+</div>
+<div class="divide-y divide-primary/10">
+<!-- Rank 1 -->
+<div class="p-4 flex items-center hover:bg-primary/5 transition-colors">
+<div class="w-8 h-8 flex items-center justify-center bg-primary text-black rounded-full font-bold mr-4">1</div>
+<div class="flex items-center flex-1">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20professional%20male%20gamer%2C%20serious%20expression%2C%20gaming%20headset%2C%20side%20profile%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=top1&orientation=squarish" class="w-10 h-10 rounded-full mr-3 object-cover object-top" alt="Player">
+<div>
+<h4 class="font-medium">Alexander "Vortex" Chen</h4>
+<div class="flex items-center text-xs text-gray-400">
+<span class="flex items-center"><i class="ri-trophy-line mr-1"></i> 42 Tournaments</span>
+<span class="mx-2">•</span>
+<span>United States</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-primary">15,872</div>
+<div class="text-xs text-gray-400">Rating</div>
+</div>
+</div>
+<!-- Rank 2 -->
+<div class="p-4 flex items-center hover:bg-primary/5 transition-colors">
+<div class="w-8 h-8 flex items-center justify-center bg-gray-700 text-white rounded-full font-bold mr-4">2</div>
+<div class="flex items-center flex-1">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20female%20professional%20gamer%2C%20confident%20expression%2C%20gaming%20headset%2C%20looking%20at%20camera%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=top2&orientation=squarish" class="w-10 h-10 rounded-full mr-3 object-cover object-top" alt="Player">
+<div>
+<h4 class="font-medium">Sophia "QueenBee" Rodriguez</h4>
+<div class="flex items-center text-xs text-gray-400">
+<span class="flex items-center"><i class="ri-trophy-line mr-1"></i> 38 Tournaments</span>
+<span class="mx-2">•</span>
+<span>Brazil</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-primary">14,921</div>
+<div class="text-xs text-gray-400">Rating</div>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="p-4 flex items-center hover:bg-primary/5 transition-colors">
+<div class="w-8 h-8 flex items-center justify-center bg-amber-700 text-white rounded-full font-bold mr-4">3</div>
+<div class="flex items-center flex-1">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20young%20male%20gamer%2C%20asian%20ethnicity%2C%20gaming%20headset%2C%20focused%20expression%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=top3&orientation=squarish" class="w-10 h-10 rounded-full mr-3 object-cover object-top" alt="Player">
+<div>
+<h4 class="font-medium">Jin "Phantom" Park</h4>
+<div class="flex items-center text-xs text-gray-400">
+<span class="flex items-center"><i class="ri-trophy-line mr-1"></i> 35 Tournaments</span>
+<span class="mx-2">•</span>
+<span>South Korea</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-primary">14,568</div>
+<div class="text-xs text-gray-400">Rating</div>
+</div>
+</div>
+<!-- Rank 4 -->
+<div class="p-4 flex items-center hover:bg-primary/5 transition-colors">
+<div class="w-8 h-8 flex items-center justify-center bg-gray-800 text-white rounded-full font-bold mr-4">4</div>
+<div class="flex items-center flex-1">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20professional%20gamer%2C%20female%2C%20scandinavian%20features%2C%20blonde%20hair%2C%20gaming%20headset%2C%20serious%20expression%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=top4&orientation=squarish" class="w-10 h-10 rounded-full mr-3 object-cover object-top" alt="Player">
+<div>
+<h4 class="font-medium">Emma "IceQueen" Johansson</h4>
+<div class="flex items-center text-xs text-gray-400">
+<span class="flex items-center"><i class="ri-trophy-line mr-1"></i> 31 Tournaments</span>
+<span class="mx-2">•</span>
+<span>Sweden</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-primary">13,742</div>
+<div class="text-xs text-gray-400">Rating</div>
+</div>
+</div>
+<!-- Rank 5 -->
+<div class="p-4 flex items-center hover:bg-primary/5 transition-colors">
+<div class="w-8 h-8 flex items-center justify-center bg-gray-800 text-white rounded-full font-bold mr-4">5</div>
+<div class="flex items-center flex-1">
+<img src="https://readdy.ai/api/search-image?query=profile%20photo%20of%20male%20professional%20gamer%2C%20middle%20eastern%20features%2C%20gaming%20headset%2C%20confident%20pose%2C%20dark%20background%2C%20portrait&width=100&height=100&seq=top5&orientation=squarish" class="w-10 h-10 rounded-full mr-3 object-cover object-top" alt="Player">
+<div>
+<h4 class="font-medium">Malik "Desert Eagle" Al-Farsi</h4>
+<div class="flex items-center text-xs text-gray-400">
+<span class="flex items-center"><i class="ri-trophy-line mr-1"></i> 29 Tournaments</span>
+<span class="mx-2">•</span>
+<span>United Arab Emirates</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-bold text-primary">13,105</div>
+<div class="text-xs text-gray-400">Rating</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-primary/20 text-center">
+<button class="text-primary hover:underline flex items-center gap-1 mx-auto">
+View full leaderboard <i class="ri-arrow-right-line"></i>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Section -->
+<section class="py-20 bg-black">
+<div class="container mx-auto px-4">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold mb-4 orbitron">Platform <span class="text-primary neon-text">Features</span></h2>
+<p class="text-gray-400 max-w-2xl mx-auto">Discover what makes Native the most advanced gaming platform available. From cutting-edge 3D visuals to seamless tournament integration.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Feature 1 -->
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+<div class="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-full text-primary mb-5">
+<i class="ri-trophy-line ri-2x"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">Tournament System</h3>
+<p class="text-gray-400">Participate in tournaments across multiple game genres. Our advanced bracket system supports various formats including single elimination, double elimination, and round robin.</p>
+</div>
+<!-- Feature 2 -->
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+<div class="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-full text-primary mb-5">
+<i class="ri-live-line ri-2x"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">Live Streaming</h3>
+<p class="text-gray-400">Stream your gameplay directly on our platform with ultra-low latency. Interact with viewers in real-time and build your audience with our advanced streaming tools.</p>
+</div>
+<!-- Feature 3 -->
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+<div class="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-full text-primary mb-5">
+<i class="ri-vr-line ri-2x"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">3D Visualization</h3>
+<p class="text-gray-400">Experience games in a new dimension with our 3D visualization technology. View detailed models of in-game items, characters, and environments in stunning detail.</p>
+</div>
+<!-- Feature 4 -->
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+<div class="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-full text-primary mb-5">
+<i class="ri-team-line ri-2x"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">Team Management</h3>
+<p class="text-gray-400">Create and manage your gaming team with our comprehensive tools. Schedule practices, analyze performance, and coordinate tournament participation all in one place.</p>
+</div>
+<!-- Feature 5 -->
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+<div class="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-full text-primary mb-5">
+<i class="ri-chat-3-line ri-2x"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">Community Hub</h3>
+<p class="text-gray-400">Connect with fellow gamers in our vibrant community. Join groups, participate in discussions, and share your gaming experiences with like-minded individuals.</p>
+</div>
+<!-- Feature 6 -->
+<div class="bg-secondary/30 rounded-lg p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+<div class="w-14 h-14 flex items-center justify-center bg-primary/10 rounded-full text-primary mb-5">
+<i class="ri-wallet-3-line ri-2x"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">Prize Pools</h3>
+<p class="text-gray-400">Compete for substantial prize pools in our premium tournaments. Our secure payment system ensures winners receive their rewards promptly and securely.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-b from-black to-secondary/30 relative">
+<div class="absolute inset-0 z-0">
+<div style="background-image: url('https://readdy.ai/api/search-image?query=futuristic%20gaming%20arena%20with%20neon%20green%20lighting%2C%20holographic%20displays%2C%20professional%20gaming%20setups%2C%20dark%20atmosphere%20with%20glowing%20elements%2C%20esports%20tournament%20venue%2C%20dramatic%20lighting%2C%20cinematic%20perspective&width=1920&height=600&seq=cta&orientation=landscape');" class="w-full h-full bg-cover bg-center opacity-30"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-transparent"></div>
+</div>
+<div class="container mx-auto px-4 relative z-10">
+<div class="max-w-2xl">
+<h2 class="text-4xl font-bold mb-6 orbitron">Ready to <span class="text-primary neon-text">Level Up</span> Your Gaming Experience?</h2>
+<p class="text-gray-300 text-lg mb-8">Join thousands of gamers already competing on the most advanced gaming platform. Sign up today and get access to exclusive tournaments, 3D visuals, and a vibrant community.</p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary text-black px-6 py-3 rounded-button font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap !rounded-button">
+<i class="ri-user-add-line"></i> Create Account
+</button>
+<button class="bg-white/10 backdrop-blur-sm text-white border border-white/20 px-6 py-3 rounded-button font-medium hover:bg-white/20 transition-colors flex items-center gap-2 whitespace-nowrap !rounded-button">
+<i class="ri-information-line"></i> Learn More
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-black pt-16 pb-8 border-t border-primary/20">
+<div class="container mx-auto px-4">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+<div class="lg:col-span-2">
+<a href="#" class="font-['Pacifico'] text-primary text-3xl mb-4 inline-block">Native</a>
+<p class="text-gray-400 mb-6">The next generation gaming platform with advanced 3D visuals, tournaments, and community features. Developed by NativeCodeX.</p>
+<div class="flex space-x-4">
+<a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-secondary/50 text-white hover:bg-primary hover:text-black transition-colors">
+<i class="ri-twitter-x-line"></i>
+</a>
+<a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-secondary/50 text-white hover:bg-primary hover:text-black transition-colors">
+<i class="ri-discord-line"></i>
+</a>
+<a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-secondary/50 text-white hover:bg-primary hover:text-black transition-colors">
+<i class="ri-twitch-line"></i>
+</a>
+<a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-secondary/50 text-white hover:bg-primary hover:text-black transition-colors">
+<i class="ri-youtube-line"></i>
+</a>
+</div>
+</div>
+<div>
+<h3 class="text-white font-bold mb-4">Platform</h3>
+<ul class="space-y-2">
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Tournaments</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Live Streams</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Leaderboards</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Games</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Community</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-white font-bold mb-4">Resources</h3>
+<ul class="space-y-2">
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Support</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Documentation</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">API</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Developer Tools</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Status</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-white font-bold mb-4">Company</h3>
+<ul class="space-y-2">
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">About Us</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Careers</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Blog</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Press</a></li>
+<li><a href="#" class="text-gray-400 hover:text-primary transition-colors">Contact</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-gray-800 pt-8 mt-8">
+<div class="flex flex-col md:flex-row justify-between items-center">
+<p class="text-gray-500 text-sm mb-4 md:mb-0">&copy; 2025 NativeCodeX. All rights reserved.</p>
+<div class="flex space-x-6">
+<a href="#" class="text-gray-500 hover:text-primary text-sm transition-colors">Terms of Service</a>
+<a href="#" class="text-gray-500 hover:text-primary text-sm transition-colors">Privacy Policy</a>
+<a href="#" class="text-gray-500 hover:text-primary text-sm transition-colors">Cookie Policy</a>
+</div>
+</div>
+</div>
+</div>
+</footer>
+<div id="signupModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+<div class="bg-secondary/95 rounded-lg max-w-md w-full mx-4 border border-primary/20">
+<div class="p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-2xl font-bold orbitron">Create Account</h3>
+<button id="closeSignupModal" class="text-gray-400 hover:text-white">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<form id="signupForm" class="space-y-4">
+<div>
+<label for="username" class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+<input type="text" id="username" name="username" required class="w-full bg-black/50 text-white px-4 py-2 rounded-button text-sm border-none focus:ring-2 focus:ring-primary/50">
+</div>
+<div>
+<label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+<input type="email" id="email" name="email" required class="w-full bg-black/50 text-white px-4 py-2 rounded-button text-sm border-none focus:ring-2 focus:ring-primary/50">
+</div>
+<div>
+<label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+<input type="password" id="password" name="password" required class="w-full bg-black/50 text-white px-4 py-2 rounded-button text-sm border-none focus:ring-2 focus:ring-primary/50">
+</div>
+<div>
+<label for="confirmPassword" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+<input type="password" id="confirmPassword" name="confirmPassword" required class="w-full bg-black/50 text-white px-4 py-2 rounded-button text-sm border-none focus:ring-2 focus:ring-primary/50">
+</div>
+<div class="flex items-start">
+<input type="checkbox" id="terms" name="terms" required class="mt-1 opacity-0 absolute">
+<div class="w-5 h-5 border-2 border-primary/50 rounded flex items-center justify-center mr-2 bg-black/50">
+<i class="ri-check-line text-primary hidden"></i>
+</div>
+<label for="terms" class="text-sm text-gray-300">I agree to the <a href="#" class="text-primary hover:underline">Terms of Service</a> and <a href="#" class="text-primary hover:underline">Privacy Policy</a></label>
+</div>
+<button type="submit" class="w-full bg-primary text-black px-4 py-3 rounded-button font-medium hover:bg-primary/90 transition-colors mt-6 whitespace-nowrap !rounded-button">Create Account</button>
+</form>
+<p class="text-center text-sm text-gray-400 mt-4">
+Already have an account? <a href="#" class="text-primary hover:underline">Sign In</a>
+</p>
+</div>
+</div>
+</div>
+<script id="navInteraction">
+document.addEventListener('DOMContentLoaded', function() {
+const streamItems = document.querySelectorAll('.stream-item');
+const signupModal = document.getElementById('signupModal');
+const mobileMenuButton = document.querySelector('.ri-menu-line').parentElement;
+const signupButtons = document.querySelectorAll('button:not(#closeSignupModal)');
+const closeSignupModal = document.getElementById('closeSignupModal');
+const signupForm = document.getElementById('signupForm');
+
+streamItems.forEach(item => {
+item.addEventListener('click', () => {
+signupModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+});
+});
+const termsCheckbox = document.getElementById('terms');
+const termsCheckIcon = termsCheckbox.nextElementSibling.querySelector('i');
+signupButtons.forEach(button => {
+if(button.textContent.trim() === 'Sign Up') {
+button.addEventListener('click', () => {
+signupModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+});
+}
+});
+closeSignupModal.addEventListener('click', () => {
+signupModal.classList.add('hidden');
+document.body.style.overflow = '';
+});
+signupModal.addEventListener('click', (e) => {
+if(e.target === signupModal) {
+signupModal.classList.add('hidden');
+document.body.style.overflow = '';
+}
+});
+termsCheckbox.addEventListener('change', () => {
+termsCheckIcon.classList.toggle('hidden', !termsCheckbox.checked);
+});
+signupForm.addEventListener('submit', (e) => {
+e.preventDefault();
+const password = document.getElementById('password').value;
+const confirmPassword = document.getElementById('confirmPassword').value;
+if(password !== confirmPassword) {
+const errorDiv = document.createElement('div');
+errorDiv.className = 'text-red-500 text-sm mt-2';
+errorDiv.textContent = 'Passwords do not match';
+const existingError = signupForm.querySelector('.text-red-500');
+if(existingError) existingError.remove();
+signupForm.appendChild(errorDiv);
+return;
+}
+// Here you would typically send the form data to your server
+console.log('Form submitted:', {
+username: document.getElementById('username').value,
+email: document.getElementById('email').value,
+password: password,
+terms: termsCheckbox.checked
+});
+});
+mobileMenuButton.addEventListener('click', function() {
+// Toggle mobile menu
+console.log('Mobile menu clicked');
+});
+});
+</script>
+</body>
+</html>

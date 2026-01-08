@@ -1,0 +1,8 @@
+
+{
+  "name": "NativeCodeX Monetization Command Center",
+  "description": "A hacker-themed administrative dashboard for managing the NativeCodeX Gaming Platform monetization ecosystem, featuring real-time analytics, marketplace management, and AI-driven strategy optimization.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
