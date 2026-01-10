@@ -132,4 +132,94 @@ async function seed() {
     }
 }
 
-seed();
+// Economy Seeding Data
+import MarketItem from './models/MarketItem.ts';
+import SubscriptionTier from './models/SubscriptionTier.ts';
+import Theme from './models/Theme.ts';
+
+const ITEMS = [
+    { name: 'Ghost Protocol Skin', description: 'Advanced stealth aesthetics for your node.', price: 500, rarity: 'Epic', category: 'Cosmetic', type: 'Skin', imageUrl: 'https://picsum.photos/seed/item1/300/300' },
+    { name: 'Thermal Sight Override', description: 'Tactical UI enhancement for better target acquisition.', price: 1200, rarity: 'Legendary', category: 'Functional', type: 'Mod', imageUrl: 'https://picsum.photos/seed/item2/300/300' },
+    { name: 'Neon Buffer Trace', description: 'Visual trail effect in the broadcast mesh.', price: 200, rarity: 'Rare', category: 'Cosmetic', type: 'Effect', imageUrl: 'https://picsum.photos/seed/item3/300/300' },
+    { name: 'CodeBit Multiplier', description: 'Temporary 1.5x gain on strategic interactions.', price: 2500, rarity: 'Epic', category: 'Functional', type: 'Booster', imageUrl: 'https://picsum.photos/seed/item4/300/300' }
+];
+
+const TIERS = [
+    { name: 'BASIC', price: 0, description: 'Standard operator access with essential mesh features.', features: ['Access to Nexus Feed', 'Tactical Broadcaster View', 'Public Forum Access'], tierLevel: 0 },
+    { name: 'ELITE', price: 9.99, description: 'Advanced privileges for serious combatants.', features: ['Custom Node Themes', 'Gift Transmission Capability', 'Priority Matchmaking Signal', 'Elite Clan Access'], tierLevel: 1 },
+    { name: 'LEGEND', price: 24.99, description: 'The ultimate protocol for sovereign battlefield nodes.', features: ['Certified Operator Badge', 'Zero-Fee Marketplace Access', 'Real-time Matrix Profiles', 'Beta Protocol Previews', '1000 Monthly CodeBits'], tierLevel: 2 }
+];
+
+const THEMES = [
+    {
+        name: 'Neon Grid',
+        type: 'banner',
+        price: 500,
+        description: 'Retro-futuristic tactical grid background.',
+        previewUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b25272a7?auto=format&fit=crop&q=80&w=300&h=200',
+        assets: { bannerUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b25272a7?auto=format&fit=crop&q=80&w=1200' },
+        rarity: 'Common'
+    },
+    {
+        name: 'Matrix Pulse',
+        type: 'animation',
+        price: 1500,
+        description: 'Subtle digital pulse effect for your profile nodes.',
+        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=pulse',
+        assets: { animationClass: 'animate-pulse' },
+        rarity: 'Rare'
+    },
+    {
+        name: 'Shadow Nexus',
+        type: 'bundle',
+        price: 3000,
+        description: 'Full stealth kit with banner and custom color scheme.',
+        previewUrl: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=300&h=200',
+        assets: {
+            bannerUrl: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=1200',
+            colors: { primary: '#10b981', secondary: '#064e3b', accent: '#34d399' }
+        },
+        rarity: 'Legendary'
+    }
+];
+
+import ForumCategory from './models/ForumCategory.ts';
+
+const CATEGORIES = [
+    { name: 'Announcements', description: 'Official updates from the NativeCodeX high command.', icon: 'Megaphone', color: '#3b82f6', isAdminOnly: true, order: 1 },
+    { name: 'General Discussion', description: 'The hub for all things gaming, tech, and beyond.', icon: 'MessageSquare', color: '#10b981', order: 2 },
+    { name: 'Strategy & Tips', description: 'Master the arena. Share your most lethal tactics.', icon: 'Zap', color: '#f59e0b', order: 3 },
+    { name: 'Looking for Group (LFG)', description: 'Recruit teammates for your next mission.', icon: 'Users', color: '#8b5cf6', order: 4 },
+    { name: 'Support & Bug Reports', description: 'Technical assistance and system anomalies.', icon: 'LifeBuoy', color: '#ef4444', order: 5 }
+];
+
+async function seedEconomy() {
+    console.log('--- STARTING ECONOMY SEEDING ---');
+    try {
+        await mongoose.connect(MONGODB_URI);
+
+        for (const item of ITEMS) {
+            await MarketItem.findOneAndUpdate({ name: item.name }, item, { upsert: true });
+        }
+        for (const tier of TIERS) {
+            await SubscriptionTier.findOneAndUpdate({ name: tier.name }, tier, { upsert: true });
+        }
+        for (const theme of THEMES) {
+            await Theme.findOneAndUpdate({ name: theme.name }, theme, { upsert: true });
+        }
+        for (const cat of CATEGORIES) {
+            await ForumCategory.findOneAndUpdate({ name: cat.name }, cat, { upsert: true });
+        }
+
+        console.log('Economy and Forum data seeded successfully.');
+    } catch (err) {
+        console.error('Economy seed failed:', err);
+    }
+}
+
+// Run both
+(async () => {
+    await seed();
+    await seedEconomy();
+    process.exit(0);
+})();

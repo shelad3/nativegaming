@@ -17,7 +17,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
         try {
             token = req.headers.authorization.split(' ')[1];
 
-            const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'default_secret_dev_only');
+            const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'standard_secret_fallback');
 
             req.user = await User.findById(decoded.id).select('-password');
 
@@ -44,3 +44,5 @@ export const adminOnly = (req: AuthRequest, res: Response, next: NextFunction) =
         res.status(403).json({ error: 'Not authorized as an admin' });
     }
 };
+
+export const adminAuth = adminOnly;

@@ -114,10 +114,12 @@ export interface MetricCardData {
 export interface MarketplaceItem {
   id: string;
   name: string;
+  description: string;
   price: number;
   category: 'Cosmetic' | 'Functional';
   type: string;
   rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
+  imageUrl?: string;
 }
 
 export interface Tournament {

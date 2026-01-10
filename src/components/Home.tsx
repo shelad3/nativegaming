@@ -6,6 +6,7 @@ import { User, Post } from '../types';
 import CreatePostModal from './CreatePostModal';
 import ActivityFeed from './ActivityFeed';
 import MediaGallery from './MediaGallery';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HomeProps {
   user: User;
@@ -87,272 +88,348 @@ const Home: React.FC<HomeProps> = ({ user, onNavigate, onNavigateProfile, onWatc
         onSuccess={handlePostSuccess}
       />
 
-      {!user && (
-        <section className="relative h-[500px] rounded-3xl overflow-hidden group">
-          <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-            style={{ backgroundImage: 'url(https://picsum.photos/seed/cyber/1920/1080)' }}></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary via-secondary/70 to-transparent"></div>
-          <div className="absolute inset-0 flex flex-col justify-center p-12">
-            <div className="flex items-center gap-2 text-primary font-mono mb-6">
-              <span className="w-8 h-[1px] bg-primary"></span>
-              <span className="text-xs uppercase tracking-[0.3em]">System_Online_v2.0</span>
+      {/* HERO SECTION - REBUILT FOR AAA AESTHETIC */}
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden rounded-[3rem] border border-white/5 shadow-2xl">
+        {/* Background Layer */}
+        <div className="absolute inset-0 z-0">
+          <motion.div
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 2 }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070)' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,0,0.05),transparent_70%)]"></div>
+
+          {/* Animated Mesh Grid */}
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+            maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+          }}></div>
+        </div>
+
+        <div className="relative z-10 container mx-auto px-8 py-20 flex flex-col items-center text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <span className="text-[10px] font-mono text-primary uppercase tracking-[0.5em] font-bold">Nexus_Core_Online</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-orbitron font-black text-white mb-6 leading-tight">
-              THE NEXT GEN <br />
-              <span className="text-primary neon-text italic">GAMING_ECOSYSTEM</span>
-            </h1>
-            <p className="max-w-xl text-slate-300 text-lg mb-8 font-light leading-relaxed">
-              Experience high-fidelity 3D tournaments, ultra-low latency streaming,
-              and a sovereign player economy built for the technically elite.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={startMatchmaking}
-                disabled={isMatchmaking}
-                className={`bg-primary text-black px-8 py-3 rounded font-orbitron font-bold text-sm hover:bg-accent transition-all flex items-center gap-2 ${isMatchmaking ? 'animate-pulse' : ''}`}
-              >
-                {isMatchmaking ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    {matchStatus}
-                  </div>
-                ) : (
-                  <>
-                    {getIcon('Zap', 18)} JOIN_BATTLE_NOW
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setIsPostModalOpen(true)}
-                className="bg-white/5 border border-white/10 backdrop-blur-md px-8 py-3 rounded font-orbitron font-bold text-sm hover:bg-white/10 transition-all flex items-center gap-2"
-              >
-                {getIcon('Plus', 18)} CREATE_STREAM_NODE
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            className="text-6xl md:text-8xl lg:text-9xl font-orbitron font-black text-white mb-8 tracking-tighter leading-none"
+          >
+            THE FUTURE <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary animate-gradient-x neon-text">
+              OF_GAMING
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 1 }}
+            className="max-w-2xl text-slate-400 text-lg md:text-xl font-mono mb-12 leading-relaxed opacity-80"
+          >
+            High-fidelity tournament protocols, ultra-low latency mesh-streaming, and a self-sovereign player economy. Built for the technically elite.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex flex-col sm:flex-row gap-6"
+          >
+            <button
+              onClick={startMatchmaking}
+              disabled={isMatchmaking}
+              className="group relative px-10 py-5 bg-primary text-black font-orbitron font-black text-sm rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(0,255,0,0.3)]"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              {isMatchmaking ? (
+                <span className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin"></div>
+                  {matchStatus}
+                </span>
+              ) : (
+                <span className="flex items-center gap-3">
+                  {getIcon('Zap', 20)}
+                  INITIATE_NEXUS_SYNC
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setIsPostModalOpen(true)}
+              className="px-10 py-5 bg-white/5 border border-white/10 backdrop-blur-xl text-white font-orbitron font-black text-sm rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 flex items-center gap-3 group"
+            >
+              {getIcon('Plus', 20)}
+              <span className="group-hover:tracking-widest transition-all">ESTABLISH_NODE</span>
+            </button>
+          </motion.div>
+
+          {/* Stats Bar */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-12 mt-20 pt-12 border-t border-white/5 w-full max-w-4xl"
+          >
+            {[
+              { label: 'Active_Nodes', value: '42.9K' },
+              { label: 'Network_Ping', value: '0.04ms' },
+              { label: 'Combat_Rating', value: 'ELO_2400' },
+              { label: 'Mesh_Status', value: 'NOMINAL' },
+            ].map((stat, i) => (
+              <div key={i} className="text-center md:text-left">
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">{stat.label}</p>
+                <p className="text-xl font-orbitron font-black text-white">{stat.value}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
       {user && (
-        <div className="border-b border-white/5 pb-8 mb-8 flex items-center justify-between">
+        <div className="flex items-center justify-between mt-12 mb-8">
           <div>
             <h2 className="text-3xl font-orbitron font-black text-white italic uppercase tracking-tighter">Tactical_Dashboard</h2>
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-2">Operational_Status: Ready_For_Engagement</p>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[8px] font-mono rounded uppercase">Secure_Link</span>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Operator: {user.username}</p>
+            </div>
           </div>
           <button
             onClick={() => setIsPostModalOpen(true)}
-            className="px-6 py-2.5 bg-primary/10 border border-primary/30 text-primary rounded-xl text-xs font-mono hover:bg-primary/20 transition-all uppercase flex items-center gap-2"
+            className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl text-[10px] font-mono font-bold hover:bg-primary hover:text-black transition-all uppercase flex items-center gap-2 group"
           >
-            {getIcon('Send', 16)} New_Transmission
+            {getIcon('Send', 16)}
+            <span className="group-hover:translate-x-1 transition-transform">Push_Transmission</span>
           </button>
         </div>
       )}
 
-      {/* Media Highlights */}
-      <section>
-        <MediaGallery
-          items={trendingMedia}
-          loading={isLoadingMedia}
-          title="TOP_BATTLE_INTEL"
-          onInteract={handleMediaInteraction}
-          currentUser={user}
-        />
-      </section>
+      {/* BENTO GRID LAYOUT */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-16">
 
-      {/* Main Grid: Feed + Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Left Column: Global Feed */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* Main Feed - Spans 8 COLUMNS on Large Screens */}
+        <div className="xl:col-span-8 space-y-12">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-orbitron font-bold text-white tracking-widest flex items-center gap-3">
-              <span className="w-2 h-8 bg-primary rounded-full"></span>
-              GLOBAL_FEED://
+              <span className="w-2 h-8 bg-primary rounded-full shadow-[0_0_15px_rgba(0,255,0,0.5)]"></span>
+              LIVE_MESH_CHRONICLE
             </h2>
             <div className="flex gap-2">
-              <button className="p-2 bg-white/5 border border-white/10 rounded-lg hover:border-primary/50 transition-colors">
+              <button className="p-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all text-slate-400 hover:text-primary">
                 {getIcon('Search', 16)}
               </button>
-              <button className="p-2 bg-white/5 border border-white/10 rounded-lg hover:border-primary/50 transition-colors">
+              <button className="p-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all text-slate-400 hover:text-primary">
                 {getIcon('Filter', 16)}
               </button>
             </div>
           </div>
 
-          {isLoadingPosts ? (
-            <div className="space-y-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-surface/30 border border-white/5 h-64 rounded-2xl animate-pulse"></div>
-              ))}
-            </div>
-          ) : posts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-8">
-              {posts.map(post => (
-                <div key={post.id} className="bg-surface/50 border border-white/10 rounded-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
-                  <div className="relative aspect-video overflow-hidden">
-                    <img src={post.thumbnail} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-                    <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                      <img src={post.authorAvatar} alt={post.authorName} className="w-8 h-8 rounded-full border border-primary/50 shadow-[0_0_10px_rgba(5,217,255,0.3)]" />
-                      <span className="text-[10px] font-mono text-white tracking-widest font-bold bg-black/50 px-2 py-1 rounded backdrop-blur-md">@ {post.authorName.toUpperCase()}</span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-orbitron font-black text-white mb-2 group-hover:text-primary transition-colors">{post.title}</h3>
-                    <p className="text-sm text-slate-400 font-mono mb-6 line-clamp-2 leading-relaxed italic opacity-80">{post.content}</p>
-                    <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                      <div className="flex gap-6">
-                        <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-mono text-[10px]">
-                          {getIcon('Heart', 14)} {post.likes?.length || 0}
-                        </button>
-                        <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-mono text-[10px]">
-                          {getIcon('MessageSquare', 14)} 0
-                        </button>
-                        <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-mono text-[10px]">
-                          {getIcon('Share2', 14)}
-                        </button>
+          <AnimatePresence mode="popLayout">
+            {isLoadingPosts ? (
+              <div className="space-y-6">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-surface/30 border border-white/5 h-64 rounded-3xl animate-pulse"></div>
+                ))}
+              </div>
+            ) : posts.length > 0 ? (
+              <div className="grid grid-cols-1 gap-8">
+                {posts.map((post, idx) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="group bg-surface/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-primary/20 transition-all duration-500 shadow-xl"
+                  >
+                    <div className="flex flex-col md:flex-row h-full">
+                      <div className="md:w-2/5 relative overflow-hidden aspect-video md:aspect-auto">
+                        <img src={post.thumbnail} alt={post.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-secondary/80 via-transparent to-transparent"></div>
                       </div>
-                      <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest">
-                        {new Date(post.createdAt || Date.now()).toLocaleDateString()}
-                      </span>
+                      <div className="flex-1 p-8 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-3 mb-4">
+                            <img src={post.authorAvatar} alt={post.authorName} className="w-8 h-8 rounded-full border border-primary/30" />
+                            <span className="text-[10px] font-mono text-primary font-bold uppercase tracking-widest">{post.authorName}</span>
+                            <span className="h-1 w-1 rounded-full bg-slate-700"></span>
+                            <span className="text-[9px] font-mono text-slate-500 uppercase">{new Date(post.createdAt || Date.now()).toLocaleDateString()}</span>
+                          </div>
+                          <h3 className="text-2xl font-orbitron font-black text-white mb-3 group-hover:neon-text transition-all duration-500">{post.title}</h3>
+                          <p className="text-sm text-slate-400 font-mono line-clamp-2 leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity italic">"{post.content}"</p>
+                        </div>
+                        <div className="flex justify-between items-center pt-8 mt-4 border-t border-white/5">
+                          <div className="flex gap-8">
+                            <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-mono text-[10px] font-bold group/btn">
+                              {getIcon('Heart', 16)}
+                              <span className="group-hover/btn:translate-x-1 transition-transform">{post.likes?.length || 0}</span>
+                            </button>
+                            <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-mono text-[10px] font-bold group/btn">
+                              {getIcon('MessageSquare', 16)}
+                              <span className="group-hover/btn:translate-x-1 transition-transform">12</span>
+                            </button>
+                          </div>
+                          <button className="text-primary hover:text-accent transition-colors">
+                            {getIcon('ArrowRight', 20)}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-20 flex flex-col items-center gap-4 text-slate-600 bg-surface/20 rounded-[3rem] border border-dashed border-white/5">
+                <div className="p-6 rounded-full bg-white/5 animate-pulse">
+                  {getIcon('WifiOff', 48)}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-20 flex flex-col items-center gap-4 text-slate-600">
-              {getIcon('WifiOff', 40)}
-              <p className="font-mono text-sm uppercase tracking-widest italic animate-pulse">NO_CONTENT_FOUND_IN_MESH</p>
-              <button
-                onClick={() => setIsPostModalOpen(true)}
-                className="mt-4 px-6 py-2 border border-primary/20 text-primary font-mono text-[10px] rounded-lg hover:bg-primary/5 transition-all"
-              >
-                INITIALIZE_FIRST_NODE
-              </button>
-            </div>
-          )}
+                <p className="font-mono text-sm uppercase tracking-[0.5em] italic">Mesh_Terminal_Idle</p>
+                <button
+                  onClick={() => setIsPostModalOpen(true)}
+                  className="mt-6 px-10 py-4 border border-primary text-primary font-orbitron font-bold text-[10px] rounded-2xl hover:bg-primary hover:text-black transition-all uppercase tracking-widest"
+                >
+                  Broadcast_First_Signal
+                </button>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Right Column: Widgets */}
-        <div className="space-y-8">
-          <div className="bg-surface/50 border border-white/5 rounded-2xl p-6 hover:border-primary/20 transition-all shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-orbitron text-white text-lg flex items-center gap-2">
-                {getIcon('Trophy', 20)} ARENA_PULSE
-              </h3>
-              <span className="text-[10px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-widest animate-pulse">Live</span>
-            </div>
-            <div className="space-y-4">
-              {MOCK_TOURNAMENTS.slice(0, 3).map(t => (
-                <div key={t.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 group/t">
-                  <div>
-                    <p className="text-xs font-bold text-white group-hover/t:text-primary transition-colors">{t.name}</p>
-                    <p className="text-[10px] text-primary font-mono">{t.prize}</p>
-                  </div>
-                  <button className="text-slate-500 hover:text-white transition-colors">
-                    {getIcon('ArrowRight', 16)}
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button className="w-full mt-6 py-2 text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em] hover:text-white transition-colors border-t border-white/5 pt-4">
-              VIEW_ALL_OPERATIONS
-            </button>
-          </div>
+        {/* BENTO SIDEBAR - Spans 4 COLUMNS */}
+        <div className="xl:col-span-4 space-y-8">
 
-          <div className="bg-surface/50 border border-white/5 rounded-2xl p-6 hover:border-primary/20 transition-all shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-orbitron text-white text-lg flex items-center gap-2">
-                {getIcon('Monitor', 20)} LIVE_BROADCASTS
-              </h3>
-              <span className="text-[10px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-widest animate-pulse">Mesh_Live</span>
+          {/* Bento Card 1: Live Transmissions */}
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden group shadow-2xl"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-5 text-primary rotate-12 group-hover:scale-110 transition-transform">
+              {getIcon('Radio', 80)}
             </div>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="font-orbitron text-white text-xl font-black uppercase tracking-tighter flex items-center gap-3">
+                {getIcon('Monitor', 24)} MESH_LIVE
+              </h3>
+              <div className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
+                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="text-[8px] font-mono text-red-500 font-bold uppercase tracking-widest">Receiving</span>
+              </div>
+            </div>
+
             <div className="space-y-4">
               {liveUsers.length > 0 ? liveUsers.map((u) => (
                 <div
                   key={u.id}
                   onClick={() => u.peerId && onWatchStream({ broadcasterId: u.id, peerId: u.peerId, title: u.streamTitle || 'Tactical Feed' })}
-                  className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-all cursor-pointer group/stream"
+                  className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group/stream"
                 >
                   <div className="relative">
-                    <img src={u.avatar} alt={u.username} className="w-10 h-10 rounded-full border-2 border-primary/20 group-hover/stream:border-primary transition-colors" />
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#0a0a0c] animate-pulse"></div>
+                    <img src={u.avatar} alt={u.username} className="w-12 h-12 rounded-full border-2 border-primary/20 group-hover/stream:border-primary transition-colors" />
+                    <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-secondary animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <p className="text-xs font-bold text-white uppercase group-hover/stream:text-primary transition-colors truncate">{u.username}</p>
-                    <p className="text-[9px] text-slate-400 font-mono truncate">{u.streamTitle || 'UNIDENTIFIED_SIGNAL'}</p>
+                    <p className="text-sm font-bold text-white uppercase group-hover/stream:text-primary transition-colors truncate">{u.username}</p>
+                    <p className="text-[10px] text-slate-500 font-mono truncate uppercase tracking-widest">{u.streamTitle || 'UNIDENTIFIED_SIGNAL'}</p>
                   </div>
-                  {getIcon('Play', 14, 'text-primary opacity-0 group-hover/stream:opacity-100 transition-opacity')}
+                  <div className="opacity-0 group-hover/stream:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                    <div className="bg-primary text-black p-2 rounded-xl">
+                      {getIcon('Play', 14)}
+                    </div>
+                  </div>
                 </div>
               )) : (
-                <div className="py-8 flex flex-col items-center gap-2 text-slate-600">
-                  {getIcon('WifiOff', 24)}
-                  <p className="text-[9px] font-mono uppercase tracking-widest">NO_ACTIVE_TRANSMISSIONS</p>
+                <div className="py-8 flex flex-col items-center gap-3 text-slate-700">
+                  {getIcon('WifiOff', 32)}
+                  <p className="text-[10px] font-mono uppercase tracking-[0.3em]">No_Active_Nodes</p>
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface/50 border border-white/5 rounded-2xl p-6 hover:border-primary/20 transition-all shadow-xl">
-            <ActivityFeed title="GLOBAL_EVENTS" limit={5} onNavigateProfile={onNavigateProfile} userId={user.id} />
-            <button className="w-full mt-4 py-2 text-[8px] font-mono text-slate-500 uppercase tracking-widest hover:text-white transition-colors">
-              OPEN_LIVE_CONSOLE
-            </button>
-          </div>
-
-          {/* Account Tier Widget */}
-          <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-5 rotate-12 group-hover:scale-125 transition-transform">
-              {getIcon('Zap', 100)}
+          {/* Bento Card 2: Arena Pulse */}
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="bg-primary border border-primary shadow-[0_0_50px_rgba(0,255,0,0.1)] rounded-[2.5rem] p-8 text-black group overflow-hidden relative"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 group-hover:scale-110 transition-transform">
+              {getIcon('Trophy', 100)}
             </div>
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h3 className="font-orbitron text-white text-lg flex items-center gap-2 mb-1">
-                  {getIcon('Shield', 20)} NODE_CLEARANCE
-                </h3>
-                <p className="text-[10px] font-mono text-primary uppercase tracking-[0.2em]">{user.tier}_OPERATOR</p>
-              </div>
-              <div className="bg-primary/20 p-2 rounded-lg border border-primary/30">
-                {getIcon('Crown', 18)}
-              </div>
-            </div>
+            <div className="relative z-10">
+              <h3 className="font-orbitron font-black text-2xl uppercase tracking-tighter mb-2 italic">ARENA_PULSE</h3>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] opacity-60 mb-8 underline decoration-2 underline-offset-4">Top_Tier_Sector_Operations</p>
 
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
-                <span className="text-[10px] font-mono text-slate-500 uppercase">Available_Funds</span>
-                <span className="text-sm font-bold text-amber-500">{(user.codeBits || 0).toLocaleString()} Ȼ</span>
+              <div className="space-y-4">
+                {MOCK_TOURNAMENTS.slice(0, 3).map(t => (
+                  <div key={t.id} className="flex items-center justify-between p-4 bg-black/5 rounded-2xl border border-black/10 hover:bg-black/10 transition-all cursor-pointer group/item">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-tight">{t.name}</p>
+                      <p className="text-[10px] font-mono font-bold mt-1 opacity-60">PRIZE: {t.prize}</p>
+                    </div>
+                    <div className="bg-black text-primary p-2 rounded-xl transition-all group-hover/item:bg-white group-hover/item:text-black">
+                      {getIcon('ArrowRight', 16)}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
-                <span className="text-[10px] font-mono text-slate-500 uppercase">Mesh_Access</span>
-                <span className="text-sm font-bold text-white">Full_Tunnel</span>
+              <button className="w-full mt-6 py-4 bg-black text-primary font-orbitron font-black text-[10px] rounded-2xl uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all">
+                ENTER_ARENA_NAVIGATOR
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Bento Card 3: Shell Assist */}
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="bg-surface/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 group relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-primary/20 rounded-2xl border border-primary/30 text-primary">
+                  {getIcon('Cpu', 24)}
+                </div>
+                <div>
+                  <h3 className="font-orbitron font-black text-white text-lg uppercase tracking-tighter">SHELL_ASSIST</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1 h-1 bg-primary rounded-full animate-ping"></span>
+                    <span className="text-[9px] font-mono text-primary uppercase font-bold">Neural_Link_Ready</span>
+                  </div>
+                </div>
               </div>
+              <p className="text-sm text-slate-400 font-mono leading-relaxed mb-6 opacity-80 italic">
+                "Operator, current system stability is 99.98%. Tournament match detected in 4 sectors. Awaiting commands..."
+              </p>
+              <button className="w-full py-4 bg-primary/10 border border-primary/30 text-primary font-orbitron font-black text-[10px] rounded-2xl hover:bg-primary hover:text-black transition-all uppercase tracking-[0.3em] shadow-lg shadow-primary/5">
+                ACTIVATE_NEURAL_LINK
+              </button>
             </div>
+          </motion.div>
 
-            <button
-              onClick={() => onNavigate('subscriptions')}
-              className="w-full py-4 bg-primary text-black font-orbitron font-black text-xs rounded-xl uppercase tracking-widest hover:bg-accent transition-all shadow-[0_0_15px_rgba(0,255,0,0.3)]"
-            >
-              ELEVATE_ACCESS_TIER
-            </button>
-          </div>
-
-          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-5 rotate-12 group-hover:scale-125 transition-transform">
-              {getIcon('Terminal', 100)}
-            </div>
-            <h3 className="font-orbitron text-primary text-lg flex items-center gap-2 mb-4">
-              {getIcon('Cpu', 20)} SHELL_ASSIST
-            </h3>
-            <p className="text-sm text-slate-400 mb-6 font-mono leading-tight italic">
-              "Welcome, Admin. System stability at 99.98%. I've identified 3 potential tournament matches based on your recent skill metrics."
-            </p>
-            <button className="w-full py-2 bg-primary/10 border border-primary/30 text-primary rounded font-mono text-[10px] hover:bg-primary/20 transition-all uppercase tracking-widest font-black">
-              ACTIVATE_ASSISTANT_AI
+          {/* Bento Card 4: Global Events / Audit */}
+          <div className="bg-surface/30 border border-white/5 rounded-[2.5rem] p-8 shadow-xl">
+            <ActivityFeed title="NEXUS_PULSE" limit={4} onNavigateProfile={onNavigateProfile} userId={user.id} />
+            <button className="w-full mt-8 py-3 bg-white/5 border border-white/10 text-slate-500 font-mono text-[9px] rounded-xl uppercase tracking-[0.3em] hover:text-white hover:bg-white/10 transition-all">
+              Deep_Cycle_Scan
             </button>
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 

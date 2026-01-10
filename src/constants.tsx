@@ -39,13 +39,7 @@ export const SUBSCRIPTION_PLANS = [
   { tier: SubscriptionTier.LEGEND, price: 99.99, features: ['Custom Profile Colors', 'Verified Badge', 'Profile Animations', 'Unlimited Storage', 'Direct Admin Access'], color: 'amber' }
 ];
 
-export const MOCK_MARKETPLACE: MarketplaceItem[] = [
-  { id: '1', name: 'Neon Cipher Overlay', price: 999, category: 'Functional', type: 'Stream HUD', rarity: 'Epic' },
-  { id: '2', name: 'Glitch Runner Avatar', price: 499, category: 'Cosmetic', type: 'Profile', rarity: 'Rare' },
-  { id: '3', name: 'Database Breach Emote', price: 199, category: 'Cosmetic', type: 'Chat', rarity: 'Common' },
-  { id: '4', name: 'Kernel Access Cursor', price: 299, category: 'Cosmetic', type: 'Interface', rarity: 'Rare' },
-  { id: '5', name: 'Zero-Day Analytics Pro', price: 1999, category: 'Functional', type: 'Utility', rarity: 'Legendary' },
-];
+
 
 export const GAMELIST = [
   "CyberStrike 2: Resurgence", "Neon-Tokyo Drift", "Void Runner", "Silicon Shadows", "Mecha Wars: Online",

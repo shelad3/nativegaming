@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { getIcon } from '../constants';
-import { auth } from '../services/firebase';
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { backendService } from '../services/backendService';
 import { User } from '../types';
 
@@ -20,16 +18,9 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    password: ''
+    password: '' // Kept for UI compatibility but ignored by Dev Auth
   });
   const [verificationCode, setVerificationCode] = useState('');
-
-  // Initial Config Check
-  useEffect(() => {
-    if (!auth.app.options.apiKey) {
-      setError("CRITICAL: Firebase Configuration Missing. Check .env.local");
-    }
-  }, []);
 
   const clearError = () => setError(null);
 
@@ -38,22 +29,31 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     if (error) clearError();
   };
 
-  const handleGoogleSignIn = async () => {
+  const loginWithGoogle = async () => {
     setLoading(true);
     clearError();
     try {
+      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+      const { auth } = await import('../services/firebase');
       const provider = new GoogleAuthProvider();
+
       const result = await signInWithPopup(auth, provider);
-      const userEmail = result.user.email;
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken;
 
-      if (!userEmail) throw new Error("IDENTITY_PROVIDER_ERROR: No email returned.");
+      if (!accessToken) {
+        throw new Error("Failed to retrieve Google Access Token");
+      }
 
-      // Backend sync - Auto-verified by logic in server
-      const user = await backendService.login(userEmail, "OAUTH");
+      const user = await backendService.loginWithGoogle(accessToken);
       onAuthSuccess(user);
     } catch (err: any) {
-      console.error('OAuth Error:', err);
-      setError(err.message || "CONNECTION_REFUSED_BY_PEER");
+      console.error('Firebase Auth Error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError("AUTHENTICATION_CANCELLED");
+      } else {
+        setError(`OAUTH_FAILURE: ${err.message || 'Unknown Error'}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,37 +65,22 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     clearError();
 
     try {
-      let firebaseUser;
-      if (mode === 'LOGIN') {
-        const result = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        firebaseUser = result.user;
+      // Dev/Test Login
+      const userResp = await backendService.login(
+        formData.email,
+        "PASSWORD",
+        mode === 'REGISTER' ? formData.username : undefined
+      );
+
+      if ((userResp as any).verificationRequired) {
+        setNeedsVerification(true);
+        setCurrentEmail(formData.email);
       } else {
-        const result = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-        firebaseUser = result.user;
-      }
-
-      if (firebaseUser.email) {
-        setCurrentEmail(firebaseUser.email);
-        // Login to backend to check verification status
-        const userResp: any = await backendService.login(
-          firebaseUser.email,
-          "PASSWORD",
-          mode === 'REGISTER' ? formData.username : undefined
-        );
-
-        if (userResp.verificationRequired) {
-          setNeedsVerification(true);
-        } else {
-          onAuthSuccess(userResp);
-        }
+        onAuthSuccess(userResp);
       }
     } catch (err: any) {
       console.error('Auth Error:', err);
-      // Map Firebase errors to "System" errors
-      if (err.code === 'auth/invalid-credential') setError("ACCESS_DENIED: INVALID_CREDENTIALS");
-      else if (err.code === 'auth/email-already-in-use') setError("IDENTITY_CONFLICT: EMAIL_REGISTERED");
-      else if (err.code === 'auth/weak-password') setError("SECURITY_WARNING: WEAK_CIPHER");
-      else setError(`SYSTEM_FAILURE: ${err.message}`);
+      setError(`SYSTEM_FAILURE: ${err.message || 'Unknown Error'}`);
     } finally {
       setLoading(false);
     }
@@ -185,15 +170,14 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
           ) : (
             <div className="space-y-6 animate-in fade-in duration-500">
               {/* Google Button */}
-              {/* Google Button */}
               <button
-                onClick={handleGoogleSignIn}
+                onClick={() => loginWithGoogle()}
                 disabled={loading}
                 className="w-full py-4 bg-black border border-white/10 text-white font-orbitron font-bold rounded-2xl hover:bg-white/5 hover:border-white/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98] shadow-lg group relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
 
-                {/* Custom Google Icon Container for better alignment */}
+                {/* Custom Google Icon Container */}
                 <div className="bg-white p-1 rounded-full w-6 h-6 flex items-center justify-center">
                   <img src="https://www.gstatic.com/firebase/static/bin/urls/google.svg" className="w-4 h-4" alt="Google" />
                 </div>
@@ -203,7 +187,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
 
               <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-white/10"></div>
-                <span className="flex-shrink-0 mx-4 text-[10px] font-mono text-slate-600 uppercase tracking-widest">OR VIA ENCRYPTED LINK</span>
+                <span className="flex-shrink-0 mx-4 text-[10px] font-mono text-slate-600 uppercase tracking-widest">OR VIA LOCAL LINK (DEV)</span>
                 <div className="flex-grow border-t border-white/10"></div>
               </div>
 

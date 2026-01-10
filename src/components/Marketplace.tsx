@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { MOCK_MARKETPLACE, getIcon } from '../constants';
+import { getIcon } from '../constants';
 import { User, MarketplaceItem } from '../types';
-import { backendService } from '../services/backendService';
+import { api } from '../services/api';
 
 interface MarketplaceProps {
   user: User;
@@ -21,12 +21,10 @@ const Marketplace: React.FC<MarketplaceProps> = ({ user, onUpdateBalances }) => 
 
   const fetchMarketItems = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace');
-      const data = await response.json();
-      // Map database _id to id if necessary, or just use _id
+      const { data } = await api.get('/marketplace/items');
       setMarketItems(data.map((item: any) => ({ ...item, id: item._id })));
     } catch (err) {
-      console.error('[MARKET] Index sync error:', err);
+      console.error('[MARKET] Fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -39,22 +37,16 @@ const Marketplace: React.FC<MarketplaceProps> = ({ user, onUpdateBalances }) => 
     }
     setPurchasing(item.id);
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, itemId: item.id })
+      const { data: updatedUser } = await api.post('/marketplace/purchase', {
+        userId: user.id, // Ideally, backend extracts this from token, but current impl uses body
+        itemId: item.id
       });
 
-      if (response.ok) {
-        const updatedUser = await response.json();
-        onUpdateBalances(updatedUser);
-        alert(`Asset ${item.name} acquired. Syncing with inventory...`);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Purchase failed');
-      }
+      onUpdateBalances(updatedUser);
+      alert(`Asset ${item.name} acquired. Syncing with inventory...`);
     } catch (err: any) {
-      alert('Strategic link failed during purchase.');
+      const msg = err.response?.data?.error || 'Purchase failed';
+      alert(msg);
     } finally {
       setPurchasing(null);
     }
@@ -72,6 +64,8 @@ const Marketplace: React.FC<MarketplaceProps> = ({ user, onUpdateBalances }) => 
       default: return 'text-slate-400 border-slate-700 bg-slate-800/50';
     }
   };
+
+  if (loading) return <div className="text-white font-mono p-8">Loading Market Index...</div>;
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
@@ -101,7 +95,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ user, onUpdateBalances }) => 
           <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-emerald-500/50 transition-all flex flex-col">
             <div className="aspect-square bg-slate-950 relative overflow-hidden group">
               <img
-                src={`https://picsum.photos/seed/${item.id}/300/300`}
+                src={item.imageUrl || `https://picsum.photos/seed/${item.id}/300/300`}
                 alt={item.name}
                 className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
               />
@@ -118,7 +112,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ user, onUpdateBalances }) => 
             <div className="p-4 flex-1 flex flex-col justify-between">
               <div>
                 <h3 className="font-bold text-white text-sm mb-1 line-clamp-1">{item.name}</h3>
-                <p className="text-xs text-slate-500 font-mono mb-4">{item.category}</p>
+                <p className="text-xs text-slate-500 font-mono mb-4">{item.description || item.category}</p>
               </div>
               <div className="flex items-center justify-between mt-2">
                 <div className="flex items-center gap-1">

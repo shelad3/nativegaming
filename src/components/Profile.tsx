@@ -47,8 +47,8 @@ const Profile: React.FC<ProfileProps> = ({ user, viewedProfileId, onBackToOwn, o
         setLoading(true);
         const [data, mediaData, achievementsData] = await Promise.all([
           backendService.getUserById(viewedProfileId),
-          fetch(`http://localhost:5000/api/users/${viewedProfileId}/media`).then(r => r.json()),
-          fetch(`http://localhost:5000/api/users/${viewedProfileId}/achievements`).then(r => r.json())
+          backendService.getUserMedia(viewedProfileId),
+          backendService.getUserAchievements(viewedProfileId)
         ]);
         setProfile(data);
         setClips(mediaData);
@@ -92,18 +92,10 @@ const Profile: React.FC<ProfileProps> = ({ user, viewedProfileId, onBackToOwn, o
   const handleApplyTheme = async (themeId: string | null) => {
     setApplying(themeId || 'default');
     try {
-      const response = await fetch('http://localhost:5000/api/user/apply-theme', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, themeId })
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setProfile(updatedUser);
-        applyTheme(updatedUser);
-        alert('Theme protocol synchronized successfully.');
-      }
+      const updatedUser = await backendService.applyTheme(user.id, themeId);
+      setProfile(updatedUser);
+      applyTheme(updatedUser);
+      alert('Theme protocol synchronized successfully.');
     } catch (err) {
       console.error('[THEME] Application failure:', err);
     } finally {

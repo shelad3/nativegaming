@@ -4,6 +4,7 @@ export interface IBackendService {
     // Auth
     getCurrentUser(): Promise<User | null>;
     login(email: string, method: 'OAUTH' | 'PASSWORD', username?: string): Promise<User>;
+    loginWithGoogle(token: string): Promise<User>;
     verifyEmail(email: string, code: string): Promise<User>;
     logout(): Promise<void>;
 
@@ -20,6 +21,11 @@ export interface IBackendService {
     pushAuditLog(userId: string, entry: any): Promise<void>;
     getAuditLogs(userId: string): Promise<any[]>;
     uploadAsset(file: File, onProgress: (progress: number) => void): Promise<string>;
+    getUserMedia(userId: string): Promise<any[]>;
+    getUserAchievements(userId: string): Promise<any[]>;
+    applyTheme(userId: string, themeId: string | null): Promise<User>;
+    getStoreThemes(): Promise<any[]>;
+    purchaseTheme(userId: string, themeId: string): Promise<User>;
 
     // Feed
     getGlobalPosts(): Promise<Post[]>;

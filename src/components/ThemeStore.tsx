@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIcon } from '../constants';
 import { User } from '../types';
+import { backendService } from '../services/backendService';
 
 interface Theme {
     _id: string;
@@ -32,8 +33,7 @@ const ThemeStore: React.FC<ThemeStoreProps> = ({ user, onUpdateUser, onClose }) 
 
     const fetchThemes = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/store/themes');
-            const data = await response.json();
+            const data = await backendService.getStoreThemes();
             setThemes(data);
         } catch (err) {
             console.error('[STORE] Sync failure:', err);
@@ -50,20 +50,9 @@ const ThemeStore: React.FC<ThemeStoreProps> = ({ user, onUpdateUser, onClose }) 
 
         setPurchasing(theme._id);
         try {
-            const response = await fetch('http://localhost:5000/api/store/purchase-theme', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, themeId: theme._id })
-            });
-
-            if (response.ok) {
-                const updatedUser = await response.json();
-                onUpdateUser(updatedUser);
-                alert(`${theme.name} protocol acquired. Syncing with inventory...`);
-            } else {
-                const error = await response.json();
-                alert(error.error || 'Acquisition protocol failed.');
-            }
+            const updatedUser = await backendService.purchaseTheme(user.id, theme._id);
+            onUpdateUser(updatedUser);
+            alert(`${theme.name} protocol acquired. Syncing with inventory...`);
         } catch (err) {
             alert('Connection to store node lost.');
         } finally {

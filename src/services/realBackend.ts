@@ -1,84 +1,65 @@
 import { IBackendService } from './IBackendService';
-import { User, Post, MarketplaceItem, SubscriptionTier } from '../types';
-
-const API_BASE_URL = 'http://localhost:5000/api';
-const AUTH_SESSION_KEY = 'native_codex_auth_token';
-
-// Helper for authenticated requests
-const getHeaders = () => {
-    const userId = localStorage.getItem(AUTH_SESSION_KEY);
-    return {
-        'Content-Type': 'application/json',
-        ...(userId ? { 'x-user-id': userId } : {})
-    };
-};
+import { User, Post, MarketplaceItem } from '../types';
+import { api, setAuthToken, clearAuthToken } from './api';
 
 export const realBackend: IBackendService = {
     // --- AUTH ---
     getCurrentUser: async (): Promise<User | null> => {
-        const userId = localStorage.getItem(AUTH_SESSION_KEY);
-        if (!userId) return null;
         try {
-            const resp = await fetch(`${API_BASE_URL}/users/${userId}`);
-            if (!resp.ok) return null;
-            const user = await resp.json();
+            const resp = await api.get('/auth/me');
+            const user = resp.data;
             return { ...user, id: user._id };
-        } catch {
+        } catch (err) {
+            // If 401 or network error, user is not logged in or session expired
             return null;
         }
     },
 
     login: async (email: string, method: 'OAUTH' | 'PASSWORD', username?: string): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, username, authProvider: method })
-        });
-        if (!resp.ok) throw new Error("AUTH_FAILURE");
-        const user = await resp.json();
-        const mappedUser = { ...user, id: user._id };
-        localStorage.setItem(AUTH_SESSION_KEY, mappedUser.id);
-        return mappedUser;
-    },
-
-    verifyEmail: async (email: string, code: string): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/auth/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code })
-        });
-        if (!resp.ok) throw new Error("VERIFICATION_FAILURE");
-        const user = await resp.json();
+        // This is primarily for the DEV login route
+        const resp = await api.post('/auth/login', { email, username, authProvider: method });
+        const { token, ...user } = resp.data;
+        setAuthToken(token);
         return { ...user, id: user._id };
     },
 
+    // Google Login adapter
+    loginWithGoogle: async (idToken: string): Promise<User> => {
+        const resp = await api.post('/auth/google', { token: idToken });
+        const { token, ...user } = resp.data;
+        setAuthToken(token);
+        return { ...user, id: user._id };
+    },
+
+    verifyEmail: async (email: string, code: string): Promise<User> => {
+        const resp = await api.post('/auth/verify', { email, code });
+        return { ...resp.data, id: resp.data._id };
+    },
+
     logout: async () => {
-        localStorage.removeItem(AUTH_SESSION_KEY);
+        clearAuthToken();
     },
 
     // --- SOCIAL ---
     getUserById: async (userId: string): Promise<User | null> => {
-        const resp = await fetch(`${API_BASE_URL}/users/${userId}`);
-        if (!resp.ok) return null;
-        const user = await resp.json();
-        if (!user) return null;
-        return { ...user, id: user._id };
+        try {
+            const resp = await api.get(`/users/${userId}`);
+            return { ...resp.data, id: resp.data._id };
+        } catch {
+            return null;
+        }
     },
 
     searchUsers: async (query: string): Promise<User[]> => {
-        const resp = await fetch(`${API_BASE_URL}/users?query=${query}`);
-        const users = await resp.json();
-        return users.map((u: any) => ({ ...u, id: u._id }));
+        const resp = await api.get(`/users?query=${query}`);
+        return resp.data.map((u: any) => ({ ...u, id: u._id }));
     },
 
     toggleFollow: async (currentUserId: string, targetUserId: string): Promise<{ user: User; target: User }> => {
-        const resp = await fetch(`${API_BASE_URL}/social/follow`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ currentUserId, targetUserId })
-        });
-        if (!resp.ok) throw new Error("SOCIAL_FAILURE");
-        const data = await resp.json();
+        // Updated backend route expects { targetUserId } and gets current from token
+        // But legacy signature passed currentUserId. We can ignore it if we use token.
+        const resp = await api.post('/users/follow', { targetUserId });
+        const data = resp.data;
         return {
             user: { ...data.user, id: data.user._id },
             target: { ...data.target, id: data.target._id }
@@ -87,41 +68,52 @@ export const realBackend: IBackendService = {
 
     // --- CONTENT ---
     interactWithPost: async (postId: string, userId: string, action: 'LIKE' | 'VIEW' | 'GIFT', giftType?: string): Promise<Post> => {
-        const resp = await fetch(`${API_BASE_URL}/posts/${postId}/interact`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ userId, action, giftType })
-        });
-        const post = await resp.json();
-        return { ...post, id: post._id };
+        const resp = await api.post(`/posts/${postId}/interact`, { userId, action, giftType });
+        return { ...resp.data, id: resp.data._id };
     },
 
     updateUserProfile: async (userId: string, updates: Partial<User>): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/users/${userId}`, {
-            method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify(updates)
-        });
-        const user = await resp.json();
-        return { ...user, id: user._id };
+        const resp = await api.patch(`/users/${userId}`, updates);
+        return { ...resp.data, id: resp.data._id };
     },
 
     pushAuditLog: async (userId: string, entry: any) => {
-        await fetch(`${API_BASE_URL}/users/${userId}/audit`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ entry })
-        });
+        await api.post(`/users/${userId}/audit`, { entry });
     },
 
     getAuditLogs: async (userId: string) => {
-        // Fetched via user object usually, but let's re-fetch user
-        const user = await realBackend.getUserById(userId);
-        return user?.audit_logs || [];
+        const resp = await api.get(`/users/${userId}`);
+        return resp.data.audit_logs || [];
+    },
+
+    getUserMedia: async (userId: string): Promise<any[]> => {
+        const resp = await api.get(`/users/${userId}/media`);
+        return resp.data;
+    },
+
+    getUserAchievements: async (userId: string): Promise<any[]> => {
+        const resp = await api.get(`/users/${userId}/achievements`);
+        return resp.data;
+    },
+
+    applyTheme: async (userId: string, themeId: string | null): Promise<User> => {
+        // Use the route in themes.ts which is mounted at /api
+        const resp = await api.post('/user/apply-theme', { userId, themeId });
+        return { ...resp.data, id: resp.data._id };
+    },
+
+    getStoreThemes: async (): Promise<any[]> => {
+        const resp = await api.get('/store/themes');
+        return resp.data;
+    },
+
+    purchaseTheme: async (userId: string, themeId: string): Promise<User> => {
+        const resp = await api.post('/store/purchase-theme', { userId, themeId });
+        return { ...resp.data, id: resp.data._id };
     },
 
     uploadAsset: async (file: File, onProgress: (progress: number) => void): Promise<string> => {
-        // Mock upload for now as server doesn't have file upload route
+        // Mock upload
         let progress = 0;
         while (progress < 100) {
             await new Promise(r => setTimeout(r, 100));
@@ -132,199 +124,132 @@ export const realBackend: IBackendService = {
     },
 
     getGlobalPosts: async (): Promise<Post[]> => {
-        const resp = await fetch(`${API_BASE_URL}/posts`);
-        const posts = await resp.json();
-        return posts.map((p: any) => ({ ...p, id: p._id }));
+        const resp = await api.get('/posts');
+        return resp.data.map((p: any) => ({ ...p, id: p._id }));
     },
 
     createPost: async (postData: Partial<Post>): Promise<Post> => {
-        const resp = await fetch(`${API_BASE_URL}/posts`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(postData)
-        });
-        const post = await resp.json();
-        return { ...post, id: post._id };
+        const resp = await api.post('/posts', postData);
+        return { ...resp.data, id: resp.data._id };
     },
 
     getLeaderboard: async (): Promise<User[]> => {
-        const resp = await fetch(`${API_BASE_URL}/leaderboard`);
-        const users = await resp.json();
-        return users.map((u: any) => ({ ...u, id: u._id }));
+        const resp = await api.get('/leaderboard');
+        return resp.data.map((u: any) => ({ ...u, id: u._id }));
     },
 
     getLiveUsers: async (): Promise<User[]> => {
-        const resp = await fetch(`${API_BASE_URL}/users/live`);
-        const users = await resp.json();
-        return users.map((u: any) => ({ ...u, id: u._id }));
+        const resp = await api.get('/users/live');
+        return resp.data.map((u: any) => ({ ...u, id: u._id }));
     },
 
     getUserPosts: async (userId: string): Promise<Post[]> => {
-        const resp = await fetch(`${API_BASE_URL}/users/${userId}/posts`);
-        const posts = await resp.json();
-        return posts.map((p: any) => ({ ...p, id: p._id }));
+        const resp = await api.get(`/users/${userId}/posts`);
+        return resp.data.map((p: any) => ({ ...p, id: p._id }));
     },
 
     // --- STREAMING ---
     startStream: async (userId: string, metadata: { title: string, game: string, description: string, peerId?: string }): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/streams/start`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ userId, ...metadata })
-        });
-        const user = await resp.json();
-        return { ...user, id: user._id };
+        const resp = await api.post('/streams/start', { userId, ...metadata });
+        return { ...resp.data, id: resp.data._id };
     },
 
     stopStream: async (userId: string): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/streams/stop`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ userId })
-        });
-        const user = await resp.json();
-        return { ...user, id: user._id };
+        const resp = await api.post('/streams/stop', { userId });
+        return { ...resp.data, id: resp.data._id };
     },
 
     getStreamMessages: async (streamId: string): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/streams/${streamId}/messages`);
-        return await resp.json();
+        try {
+            const resp = await api.get(`/streams/${streamId}/messages`);
+            return resp.data;
+        } catch { return []; }
     },
 
     postStreamMessage: async (streamId: string, senderId: string, senderName: string, content: string): Promise<any> => {
-        const resp = await fetch(`${API_BASE_URL}/streams/${streamId}/messages`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ senderId, senderName, content })
-        });
-        return await resp.json();
+        const resp = await api.post(`/streams/${streamId}/messages`, { senderId, senderName, content });
+        return resp.data;
     },
 
     // --- ADMIN ---
     getAllUsers: async (adminId: string): Promise<User[]> => {
-        const resp = await fetch(`${API_BASE_URL}/admin/users`, {
-            headers: getHeaders()
-        });
-        if (!resp.ok) {
-            console.error("Failed to fetch users");
-            return [];
-        }
-        const users = await resp.json();
-        return users.map((u: any) => ({ ...u, id: u._id }));
+        const resp = await api.get('/admin/users');
+        return resp.data.map((u: any) => ({ ...u, id: u._id }));
     },
 
     updateUserStatus: async (adminId: string, userId: string, status: 'active' | 'banned'): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
-            method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify({ status })
-        });
-        const user = await resp.json();
-        return { ...user, id: user._id };
+        const resp = await api.patch(`/admin/users/${userId}/status`, { status });
+        return { ...resp.data, id: resp.data._id };
     },
 
     getPlatformMetrics: async (adminId: string): Promise<any> => {
-        const resp = await fetch(`${API_BASE_URL}/admin/metrics`, {
-            headers: getHeaders()
-        });
-        if (!resp.ok) return null;
-        return await resp.json();
+        try {
+            const resp = await api.get('/admin/metrics');
+            return resp.data;
+        } catch { return null; }
     },
 
     getReportedContent: async (): Promise<any[]> => {
-        return []; // Not implemented in backend yet
+        return [];
     },
 
     // --- MARKETPLACE ---
     buyItem: async (userId: string, item: MarketplaceItem): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/marketplace/purchase`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ userId, itemId: item.id, price: item.price })
-        });
-        if (!resp.ok) {
-            const err = await resp.json();
-            throw new Error(err.error || "PURCHASE_FAILED");
-        }
-        const user = await resp.json();
-        return { ...user, id: user._id };
+        const resp = await api.post('/marketplace/purchase', { userId, itemId: item.id, price: item.price });
+        return { ...resp.data, id: resp.data._id };
     },
 
     // --- TOURNAMENTS ---
     getTournaments: async (): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/tournaments`);
-        return await resp.json();
+        const resp = await api.get('/tournaments');
+        return resp.data;
     },
 
     getTournamentById: async (id: string): Promise<any> => {
-        const resp = await fetch(`${API_BASE_URL}/tournaments/${id}`);
-        return await resp.json();
+        const resp = await api.get(`/tournaments/${id}`);
+        return resp.data;
     },
 
     registerForTournament: async (userId: string, tournamentId: string): Promise<User> => {
-        const resp = await fetch(`${API_BASE_URL}/tournaments/register`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ userId, tournamentId })
-        });
-
-        if (!resp.ok) {
-            try {
-                const err = await resp.json();
-                throw new Error(err.error || "TOURNAMENT_REGISTRATION_FAILED");
-            } catch {
-                throw new Error("TOURNAMENT_REGISTRATION_FAILED");
-            }
-        }
-        const user = await resp.json();
-        return { ...user, id: user._id };
+        const resp = await api.post('/tournaments/register', { userId, tournamentId });
+        return { ...resp.data, id: resp.data._id };
     },
 
     getMatches: async (tournamentId: string): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matches`);
-        return await resp.json();
+        const resp = await api.get(`/tournaments/${tournamentId}/matches`);
+        return resp.data;
     },
 
     setMatchResult: async (matchId: string, winnerId: string, score: string): Promise<any> => {
-        const resp = await fetch(`${API_BASE_URL}/matches/${matchId}/result`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ winnerId, score })
-        });
-        return await resp.json();
+        const resp = await api.post(`/matches/${matchId}/result`, { winnerId, score });
+        return resp.data;
     },
 
     // --- MESSAGES ---
     getMessages: async (userId: string): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/messages/${userId}`);
-        return await resp.json();
+        try {
+            const resp = await api.get(`/messages/${userId}`);
+            return resp.data;
+        } catch { return []; }
     },
 
     getConversations: async (): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/conversations`, {
-            headers: getHeaders()
-        });
-        return await resp.json();
+        const resp = await api.get('/conversations');
+        return resp.data;
     },
 
     getConversationMessages: async (conversationId: string): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
-            headers: getHeaders()
-        });
-        return await resp.json();
+        const resp = await api.get(`/conversations/${conversationId}/messages`);
+        return resp.data;
     },
 
     sendMessage: async (messageData: any): Promise<any> => {
-        const resp = await fetch(`${API_BASE_URL}/messages`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(messageData)
-        });
-        return await resp.json();
+        const resp = await api.post('/messages', messageData);
+        return resp.data;
     },
 
     getNotifications: async (userId: string): Promise<any[]> => {
-        const resp = await fetch(`${API_BASE_URL}/notifications/${userId}`);
-        return await resp.json();
+        const resp = await api.get(`/notifications/${userId}`);
+        return resp.data;
     }
 };

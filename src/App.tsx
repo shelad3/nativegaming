@@ -26,6 +26,7 @@ import { User } from './types';
 import { backendService } from './services/backendService';
 import { usePremiumTheme } from './components/PremiumThemeProvider';
 import { useSocket } from './context/SocketContext';
+import { getAuthToken } from './services/api';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -44,7 +45,8 @@ const App: React.FC = () => {
 
   const { applyTheme } = usePremiumTheme();
 
-  const { socket } = useSocket();
+  // Destructure connectWithToken and disconnect from context
+  const { socket, connectWithToken, disconnect } = useSocket();
 
   useEffect(() => {
     const initBackend = async () => {
@@ -52,6 +54,9 @@ const App: React.FC = () => {
         const currentUser = await backendService.getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
+          // Auto-connect socket if user is restored
+          connectWithToken(getAuthToken() || '');
+
           // Load messages on init if user exists
           const msgs = await backendService.getMessages(currentUser.id);
           setMessages(msgs);
@@ -63,7 +68,7 @@ const App: React.FC = () => {
       }
     };
     initBackend();
-  }, []);
+  }, [connectWithToken]);
 
   useEffect(() => {
     if (!socket || !user) return;
@@ -88,6 +93,10 @@ const App: React.FC = () => {
 
   const handleAuthSuccess = async (authUser: User) => {
     setUser(authUser);
+
+    // Connect socket with the new token
+    connectWithToken(getAuthToken() || '');
+
     if (authUser.hasCompletedOnboarding) {
       setActiveTab('home');
     }
@@ -102,6 +111,7 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await backendService.logout();
+    disconnect(); // Disconnect socket
     setUser(null);
     setActiveTab('home');
   };
@@ -241,7 +251,7 @@ const App: React.FC = () => {
             }}
           />
         ) : <Home user={user} onNavigate={setActiveTab} onNavigateProfile={navigateToProfile} onWatchStream={watchStream} />;
-      case 'settings': return <Settings user={user} onUpdate={setUser} onLogout={handleLogout} />;
+
       default: return <Home />;
     }
   };

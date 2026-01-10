@@ -2,6 +2,9 @@ import express from 'express';
 import User from '../models/User';
 import { Notification } from '../models/Notification';
 import { protect, adminOnly } from '../middleware/authMiddleware';
+import Media from '../models/Media';
+import Post from '../models/Post';
+import Achievement from '../models/Achievement';
 
 const router = express.Router();
 
@@ -40,9 +43,40 @@ router.get('/live', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: 'Fetch failure' });
+    }
+});
+
+// Get User's Media (Clips/VODs)
+router.get('/:id/media', async (req, res) => {
+    try {
+        const media = await Media.find({ userId: req.params.id }).sort({ createdAt: -1 });
+        res.json(media);
+    } catch (err) {
+        res.status(500).json({ error: 'Media fetch failure' });
+    }
+});
+
+// Get User's Posts
+router.get('/:id/posts', async (req, res) => {
+    try {
+        const posts = await Post.find({ authorId: req.params.id }).sort({ createdAt: -1 });
+        res.json(posts);
+    } catch (err) {
+        res.status(500).json({ error: 'Posts fetch failure' });
+    }
+});
+
+// Get User's Achievements
+router.get('/:id/achievements', async (req, res) => {
+    try {
+        const achievements = await Achievement.find({ userId: req.params.id }).sort({ createdAt: -1 });
+        res.json(achievements);
+    } catch (err) {
+        res.status(500).json({ error: 'Achievements fetch failure' });
     }
 });
 

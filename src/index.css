@@ -74,6 +74,32 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
   }
+
+  .neon-text {
+    @apply text-white;
+    text-shadow: 0 0 10px var(--glow-primary), 0 0 20px var(--glow-primary), 0 0 30px var(--glow-primary);
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 15s ease infinite;
+  }
+
+  .backdrop-glow {
+    @apply relative;
+  }
+  .backdrop-glow::after {
+    content: '';
+    @apply absolute -inset-1 bg-primary/20 blur-2xl -z-10 rounded-full opacity-0 transition-opacity duration-500;
+  }
+  .backdrop-glow:hover::after {
+    @apply opacity-100;
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Variable mappings for Tailwind classes that might rely on vars (if configured) */
