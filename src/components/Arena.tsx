@@ -98,16 +98,16 @@ const Arena: React.FC<ArenaProps> = ({ user: initialUser }) => {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${match.winnerId === match.player1Id ? 'bg-emerald-500/10 border-emerald-500/50' : 'bg-white/5 border-transparent'}`}>
+                                        <div className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${match.winnerId === (match.player1Id?._id || match.player1Id) ? 'bg-emerald-500/10 border-emerald-500/50' : 'bg-white/5 border-transparent'}`}>
                                             <span className="text-sm font-bold text-white uppercase">{match.player1Id?.username || 'TBD'}</span>
-                                            {match.winnerId === match.player1Id && <span className="text-[10px] text-emerald-500 font-black">WIN</span>}
+                                            {match.winnerId === (match.player1Id?._id || match.player1Id) && <span className="text-[10px] text-emerald-500 font-black">WIN</span>}
                                         </div>
                                         <div className="flex justify-center">
                                             <span className="text-[10px] font-mono text-slate-600">VS</span>
                                         </div>
-                                        <div className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${match.winnerId === match.player2Id ? 'bg-emerald-500/10 border-emerald-500/50' : 'bg-white/5 border-transparent'}`}>
+                                        <div className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${match.winnerId === (match.player2Id?._id || match.player2Id) ? 'bg-emerald-500/10 border-emerald-500/50' : 'bg-white/5 border-transparent'}`}>
                                             <span className="text-sm font-bold text-white uppercase">{match.player2Id?.username || 'TBD'}</span>
-                                            {match.winnerId === match.player2Id && <span className="text-[10px] text-emerald-500 font-black">WIN</span>}
+                                            {match.winnerId === (match.player2Id?._id || match.player2Id) && <span className="text-[10px] text-emerald-500 font-black">WIN</span>}
                                         </div>
                                     </div>
                                 </div>

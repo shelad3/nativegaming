@@ -15,20 +15,45 @@ export const realBackend: IBackendService = {
         }
     },
 
-    login: async (email: string, method: 'OAUTH' | 'PASSWORD', username?: string): Promise<User> => {
+    login: async (email: string, method: 'OAUTH' | 'PASSWORD', username?: string): Promise<User | any> => {
         // This is primarily for the DEV login route
         const resp = await api.post('/auth/login', { email, username, authProvider: method });
+
+        if (resp.data.token) {
+            const { token, ...user } = resp.data;
+            setAuthToken(token);
+            return { ...user, id: user._id };
+        }
+        return resp.data;
+    },
+
+    // Google Login adapter
+    loginWithGoogle: async (idToken: string): Promise<User | any> => {
+        const resp = await api.post('/auth/google', { token: idToken });
+        // Check if we got a token or a requirement
+        if (resp.data.token) {
+            const { token, ...user } = resp.data;
+            setAuthToken(token);
+            return { ...user, id: user._id };
+        }
+        return resp.data; // Returns { require2FA: true, email... } or { requireAdminAuth: true... }
+    },
+
+    verifyAdmin: async (email: string, password: string): Promise<User> => {
+        const resp = await api.post('/auth/verify-admin', { email, password });
         const { token, ...user } = resp.data;
         setAuthToken(token);
         return { ...user, id: user._id };
     },
 
-    // Google Login adapter
-    loginWithGoogle: async (idToken: string): Promise<User> => {
-        const resp = await api.post('/auth/google', { token: idToken });
-        const { token, ...user } = resp.data;
-        setAuthToken(token);
-        return { ...user, id: user._id };
+    verify2FA: async (email: string, code: string): Promise<User | any> => {
+        const resp = await api.post('/auth/verify-2fa', { email, code });
+        if (resp.data.token) {
+            const { token, ...user } = resp.data;
+            setAuthToken(token);
+            return { ...user, id: user._id };
+        }
+        return resp.data;
     },
 
     verifyEmail: async (email: string, code: string): Promise<User> => {
@@ -77,6 +102,11 @@ export const realBackend: IBackendService = {
         return { ...resp.data, id: resp.data._id };
     },
 
+    onboard: async (userId: string, data: any): Promise<User> => {
+        const resp = await api.post('/users/onboard', data);
+        return { ...resp.data, id: resp.data._id };
+    },
+
     pushAuditLog: async (userId: string, entry: any) => {
         await api.post(`/users/${userId}/audit`, { entry });
     },
@@ -96,9 +126,29 @@ export const realBackend: IBackendService = {
         return resp.data;
     },
 
-    applyTheme: async (userId: string, themeId: string | null): Promise<User> => {
+    getUserNotifications: async (userId: string): Promise<any[]> => {
+        const resp = await api.get(`/users/${userId}/notifications`);
+        return resp.data;
+    },
+
+    markNotificationRead: async (notificationId: string): Promise<any> => {
+        const resp = await api.patch(`/users/notifications/${notificationId}/read`);
+        return resp.data;
+    },
+
+    getActivities: async (): Promise<any[]> => {
+        const resp = await api.get('/activities');
+        return resp.data;
+    },
+
+    getUserActivities: async (userId: string): Promise<any[]> => {
+        const resp = await api.get(`/activities/user/${userId}`);
+        return resp.data;
+    },
+
+    applyTheme: async (userId: string, themeId: string | null, slot?: string): Promise<User> => {
         // Use the route in themes.ts which is mounted at /api
-        const resp = await api.post('/user/apply-theme', { userId, themeId });
+        const resp = await api.post('/user/apply-theme', { userId, themeId, slot });
         return { ...resp.data, id: resp.data._id };
     },
 
@@ -113,14 +163,33 @@ export const realBackend: IBackendService = {
     },
 
     uploadAsset: async (file: File, onProgress: (progress: number) => void): Promise<string> => {
-        // Mock upload
-        let progress = 0;
-        while (progress < 100) {
-            await new Promise(r => setTimeout(r, 100));
-            progress += 20;
-            onProgress(progress);
+        try {
+            // Import the upload service
+            const { uploadToFirebase } = await import('./fileUpload');
+
+            // Get current user ID from token (you might need to adjust this based on your auth implementation)
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                throw new Error('Not authenticated');
+            }
+
+            // Decode token to get user ID (simplified - you might want to use jwt-decode)
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const userId = payload.userId || payload.id;
+
+            // Upload to Firebase Storage
+            const result = await uploadToFirebase(
+                file,
+                `users/${userId}/uploads`,
+                file.name,
+                { onProgress }
+            );
+
+            return result.downloadURL;
+        } catch (error: any) {
+            console.error('Upload failed:', error);
+            throw new Error(`Upload failed: ${error.message}`);
         }
-        return `https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?auto=format&fit=crop&q=80&w=800&file=${file.name}`;
     },
 
     getGlobalPosts: async (): Promise<Post[]> => {
@@ -193,6 +262,16 @@ export const realBackend: IBackendService = {
         return [];
     },
 
+    getReports: async (): Promise<any[]> => {
+        const resp = await api.get('/admin/reports');
+        return resp.data;
+    },
+
+    resolveReport: async (reportId: string, action: 'BAN' | 'DISMISS', adminNotes?: string, banReason?: string): Promise<any> => {
+        const resp = await api.post('/admin/resolve-report', { reportId, action, adminNotes, banReason });
+        return resp.data;
+    },
+
     // --- MARKETPLACE ---
     buyItem: async (userId: string, item: MarketplaceItem): Promise<User> => {
         const resp = await api.post('/marketplace/purchase', { userId, itemId: item.id, price: item.price });
@@ -228,7 +307,11 @@ export const realBackend: IBackendService = {
     // --- MESSAGES ---
     getMessages: async (userId: string): Promise<any[]> => {
         try {
-            const resp = await api.get(`/messages/${userId}`);
+            // Updated to conversations if that's what the backend provides, 
+            // or we add a specific message fetcher. For now, matching the mount.
+            const resp = await api.get('/messages/conversations', {
+                headers: { 'x-user-id': userId }
+            });
             return resp.data;
         } catch { return []; }
     },
@@ -249,7 +332,7 @@ export const realBackend: IBackendService = {
     },
 
     getNotifications: async (userId: string): Promise<any[]> => {
-        const resp = await api.get(`/notifications/${userId}`);
+        const resp = await api.get(`/messages/notifications/${userId}`);
         return resp.data;
     }
 };

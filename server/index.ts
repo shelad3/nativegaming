@@ -4,7 +4,14 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import Stripe from 'stripe';
+import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Config & Security
+import { validateEnvironment, getEnvironmentSummary } from './config/validateEnv';
+import { apiLimiter, authLimiter } from './middleware/rateLimiter';
+import { pesapalService } from './services/pesapal';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -17,8 +24,15 @@ import clanRoutes from './routes/clans';
 import forumRoutes from './routes/forums';
 import adminRoutes from './routes/admin';
 import themeRoutes from './routes/themes';
+import paymentRoutes from './routes/payments';
+import postRoutes from './routes/posts';
+import socialRoutes from './routes/social';
+import streamRoutes from './routes/streams';
+import activitiesRoutes from './routes/activities';
+import matchRoutes from './routes/matches';
 
 import { initializeSocket } from './socketHandler';
+import './services/firebaseAdmin'; // Initialize Firebase Admin
 import { Notification } from './models/Notification';
 import Transaction from './models/Transaction';
 import User from './models/User';
@@ -26,24 +40,72 @@ import User from './models/User';
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
+// Validate environment variables before starting
+try {
+    validateEnvironment();
+    console.log('📊 Environment Configuration:');
+    console.log(getEnvironmentSummary());
+} catch (error: any) {
+    console.error('❌ Server startup failed:', error.message);
+    process.exit(1);
+}
+
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3000'], credentials: true })); // Updated to allow both dev ports
+// Security Middleware - Apply helmet first
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+}));
+
+// CORS Configuration - Use environment variable for production
+const allowedOrigins = process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000']
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
+if (process.env.NODE_ENV === 'production') {
+    console.log('🔒 Production CORS enabled for:', process.env.FRONTEND_URL || 'NONE (Check FRONTEND_URL)');
+}
+
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true
+}));
+
+// Body parsing
 app.use(express.json());
 
-// Database Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nativecodex';
+// Static File Serving
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/clips', express.static(path.join(__dirname, '../public/clips')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
+// Rate limiting for all API routes
+app.use('/api/', apiLimiter);
+
+// Database Connection - No fallback in production
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI is required');
+    process.exit(1);
+}
 mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .then(() => console.log('✅ Connected to MongoDB at', MONGODB_URI.split('@').pop()))
+    .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Socket.IO Setup
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:5173', 'http://localhost:3000'],
+        origin: ['http://localhost:5173', 'http://localhost:3000', 'http://10.10.6.170:3000'],
         methods: ['GET', 'POST']
     }
 });
@@ -57,22 +119,43 @@ app.use((req, res, next) => {
 // Initialize Socket Handler
 initializeSocket(io);
 
-// Stripe Setup
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-12-15.clover' as any }); // Updated API version
+// Initialize Pesapal IPN on startup
+pesapalService.registerIPN()
+    .then(() => console.log('✅ Pesapal IPN registered'))
+    .catch(err => console.warn('⚠️  Pesapal IPN registration failed:', err.message));
 
 // --- ROUTES ---
-app.use('/api/auth', authRoutes);
+// Auth routes with stricter rate limiting
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/leaderboard', async (req, res) => {
+    try {
+        const users = await User.find()
+            .sort({ codeBits: -1, 'stats.xp': -1 })
+            .limit(50);
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: 'Leaderboard sync failure' });
+    }
+});
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/tournaments', tournamentRoutes);
+app.use('/api/matches', matchRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/clans', clanRoutes);
+app.use('/api/social', socialRoutes);
 app.use('/api/forums', forumRoutes);
+app.use('/api/activities', activitiesRoutes);
+app.use('/api/streams', streamRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api', themeRoutes); // Themes/Subscriptions route root varies, checked files to match
+app.use('/api', themeRoutes);
+app.use('/api/payments', paymentRoutes);
 
-// Webhook for Stripe (Needs raw body, so handled before JSON parser if possible, but here separate route specific middleware)
+// DEPRECATED: Stripe webhook - Commented out during Pesapal migration
+// Will be removed completely after full migration is verified
+/*
 app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -82,54 +165,22 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
         return res.status(400).send('Webhook Error: Missing signature');
     }
 
-    let event: Stripe.Event;
+    let event: any;
 
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+        // Stripe webhook verification would go here
+        // event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
     } catch (err: any) {
         console.error('[WEBHOOK] Signature verification failed:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object as Stripe.Checkout.Session;
-        try {
-            const existingTransaction = await Transaction.findOne({
-                stripeSessionId: session.id,
-                status: 'completed'
-            });
-
-            if (existingTransaction) {
-                return res.json({ received: true });
-            }
-
-            const { userId, codeBitsAwarded } = session.metadata as any;
-            const user = await User.findById(userId);
-            if (user) {
-                user.codeBits = (user.codeBits || 0) + parseInt(codeBitsAwarded);
-                await user.save();
-
-                await Transaction.findOneAndUpdate(
-                    { stripeSessionId: session.id },
-                    { status: 'completed', stripePaymentIntentId: session.payment_intent as string }
-                );
-
-                const notification = await Notification.create({
-                    userId,
-                    type: 'SYSTEM',
-                    content: `Payment successful! ${codeBitsAwarded} CodeBits have been added to your account.`
-                });
-
-                io.to(`user_${userId}`).emit('new_notification', notification);
-            }
-        } catch (err) {
-            console.error('[WEBHOOK] Processing error:', err);
-            return res.status(500).json({ error: 'Webhook processing failed' });
-        }
-    }
+    // Stripe checkout.session.completed handling
+    // ... (keeping for reference during migration)
 
     res.json({ received: true });
 });
+*/
 
 // Basic Health Check
 app.get('/', (req, res) => {

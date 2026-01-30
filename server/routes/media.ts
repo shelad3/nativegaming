@@ -8,7 +8,35 @@ import { Notification } from '../models/Notification';
 import { extractClip } from '../ffmpegUtils';
 import { logActivity } from '../services/gamificationService';
 
+import multer from 'multer';
+import { generateThumbnail } from '../ffmpegUtils';
+
 const router = express.Router();
+
+// Configure Multer for video uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.resolve('./public/uploads');
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('video/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only video files are allowed'));
+        }
+    },
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
 // GET /api/media/trending - Get trending media
 router.get('/trending', async (req, res) => {
@@ -29,36 +57,37 @@ router.get('/trending', async (req, res) => {
     }
 });
 
-// POST /api/media/clips - Create clip
-router.post('/clips', async (req, res) => {
-    const { userId, title, game, duration } = req.body;
+// POST /api/media/clips - Create clip (REAL UPLOAD)
+router.post('/clips', upload.single('file'), async (req, res) => {
+    const { userId, title, game } = req.body;
+
+    if (!req.file) {
+        return res.status(400).json({ error: 'No video file provided' });
+    }
+
     try {
-        console.log(`[CLIP] Initiating tactical extraction for user ${userId}...`);
+        console.log(`[CLIP] Processing real extraction for user ${userId}...`);
 
         const clipId = new mongoose.Types.ObjectId();
-        const baseDir = path.resolve('./public/clips');
-        if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+        const videoFilename = req.file.filename;
+        const thumbnailFilename = `${clipId}.jpg`;
 
-        const outputPath = path.join(baseDir, `${clipId}.mp4`);
-        const mockInput = path.resolve('./public/mock_broadcast.mp4');
+        const videoPath = req.file.path;
+        const thumbnailPath = path.join(path.resolve('./public/uploads'), thumbnailFilename);
 
-        // Check if mock input exists, otherwise simulate
-        if (fs.existsSync(mockInput)) {
-            await extractClip(mockInput, outputPath, '00:00:05', duration || 10);
-        } else {
-            console.warn('[CLIP] Mock input signal not found on disk. Falling back to simulation logic.');
-        }
+        // Generate dynamic thumbnail from the uploaded video
+        await generateThumbnail(videoPath, thumbnailPath);
 
-        const mockUrl = `http://localhost:5000/clips/${clipId}.mp4`;
-        const mockThumbnail = `https://picsum.photos/seed/${clipId}/1280/720`;
+        const videoUrl = `/uploads/${videoFilename}`;
+        const thumbnailUrl = `/uploads/${thumbnailFilename}`;
 
         const media = await Media.create({
             _id: clipId,
             userId,
             type: 'CLIP',
             title: title || 'Tactical Highlight',
-            url: mockUrl,
-            thumbnail: mockThumbnail,
+            url: videoUrl,
+            thumbnail: thumbnailUrl,
             game: game || 'General',
             stats: { views: 0, likes: [], gifts: 0 }
         });
@@ -66,9 +95,9 @@ router.post('/clips', async (req, res) => {
         await logActivity(userId, 'MEDIA_CREATED', { targetId: media._id, targetName: title, type: 'CLIP' });
 
         res.status(201).json(media);
-    } catch (err) {
-        console.error('[CLIP] Extraction failure:', err);
-        res.status(500).json({ error: 'Failed to process clip' });
+    } catch (err: any) {
+        console.error('[CLIP] Processing failure:', err);
+        res.status(500).json({ error: 'Failed to process clip: ' + err.message });
     }
 });
 

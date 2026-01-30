@@ -16,6 +16,7 @@ export interface IPost extends Document {
         timestamp: Date;
     }[];
     authorId?: string;
+    isSubscriberOnly: boolean;
 }
 
 const PostSchema: Schema = new Schema({
@@ -32,6 +33,7 @@ const PostSchema: Schema = new Schema({
         amount: { type: Number, required: true },
         timestamp: { type: Date, default: Date.now }
     }],
+    isSubscriberOnly: { type: Boolean, default: false },
     authorId: { type: String }
 }, { timestamps: true });
 

@@ -2,8 +2,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IMatch extends Document {
     tournamentId: mongoose.Types.ObjectId;
-    player1Id: mongoose.Types.ObjectId;
-    player2Id: mongoose.Types.ObjectId;
+    player1Id?: mongoose.Types.ObjectId;
+    player2Id?: mongoose.Types.ObjectId;
     winnerId?: mongoose.Types.ObjectId;
     score?: string;
     round: number;
@@ -14,8 +14,8 @@ export interface IMatch extends Document {
 
 const MatchSchema: Schema = new Schema({
     tournamentId: { type: Schema.Types.ObjectId, ref: 'Tournament', required: true },
-    player1Id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    player2Id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    player1Id: { type: Schema.Types.ObjectId, ref: 'User' },
+    player2Id: { type: Schema.Types.ObjectId, ref: 'User' },
     winnerId: { type: Schema.Types.ObjectId, ref: 'User' },
     score: { type: String },
     round: { type: Number, default: 1 },

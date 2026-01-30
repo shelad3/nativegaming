@@ -116,6 +116,21 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Get Clan Members Presence
+router.get('/:id/members/presence', async (req, res) => {
+    try {
+        const clan = await Clan.findById(req.params.id);
+        if (!clan) return res.status(404).json({ error: 'Clan not found' });
+
+        const memberIds = clan.members.map(m => m.userId);
+        const presence = await User.find({ _id: { $in: memberIds } }).select('_id username isOnline lastActive');
+
+        res.json(presence);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch presence matrix' });
+    }
+});
+
 // Update clan (leader only)
 router.patch('/:id', async (req, res) => {
     const { userId, description, avatar, settings } = req.body;

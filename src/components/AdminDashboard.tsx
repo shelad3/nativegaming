@@ -17,7 +17,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user.email !== 'sheldonramu8@gmail.com') return;
+    if (!user.isAdmin && user.email !== 'sheldonramu8@gmail.com') return;
 
     const fetchData = async () => {
       setLoading(true);
@@ -39,7 +39,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     fetchData();
   }, [user.id, user.email]);
 
-  if (user.email !== 'sheldonramu8@gmail.com') {
+  if (!user.isAdmin && user.email !== 'sheldonramu8@gmail.com') {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-6">
         <div className="text-red-500 animate-pulse">{getIcon('Shield', 64)}</div>

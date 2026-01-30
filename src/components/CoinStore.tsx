@@ -46,7 +46,7 @@ const CoinStore: React.FC<CoinStoreProps> = ({ user }) => {
         setLoading(packageId);
 
         try {
-            const response = await fetch('http://localhost:5000/api/payments/create-checkout-session', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/payments/create-checkout`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id, packageId })
@@ -55,7 +55,7 @@ const CoinStore: React.FC<CoinStoreProps> = ({ user }) => {
             const data = await response.json();
 
             if (data.url) {
-                // Redirect to Stripe Checkout
+                // Redirect to Pesapal Checkout
                 window.location.href = data.url;
             } else {
                 throw new Error('No checkout URL received');
@@ -88,7 +88,7 @@ const CoinStore: React.FC<CoinStoreProps> = ({ user }) => {
                 </div>
                 <div>
                     <p className="text-sm font-bold text-white">Secure Payment Processing</p>
-                    <p className="text-[10px] font-mono text-slate-500">All transactions are encrypted and processed via Stripe. Your payment information is never stored on our servers.</p>
+                    <p className="text-[10px] font-mono text-slate-500">All transactions are encrypted and processed securely. Your payment information is never stored on our servers.</p>
                 </div>
             </div>
 
@@ -98,8 +98,8 @@ const CoinStore: React.FC<CoinStoreProps> = ({ user }) => {
                     <div
                         key={pkg.id}
                         className={`relative glass rounded-[2rem] border overflow-hidden group transition-all hover:scale-105 ${pkg.popular
-                                ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.3)]'
-                                : 'border-white/10 hover:border-primary/50'
+                            ? 'border-primary shadow-[0_0_30px_rgba(16,185,129,0.3)]'
+                            : 'border-white/10 hover:border-primary/50'
                             }`}
                     >
                         {/* Popular Badge */}
@@ -152,10 +152,10 @@ const CoinStore: React.FC<CoinStoreProps> = ({ user }) => {
                                 onClick={() => handlePurchase(pkg.id)}
                                 disabled={loading !== null}
                                 className={`w-full py-4 rounded-xl font-orbitron font-black text-sm uppercase transition-all ${loading === pkg.id
-                                        ? 'bg-slate-700 text-slate-400 cursor-wait'
-                                        : pkg.popular
-                                            ? 'bg-primary text-black hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
-                                            : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                                    ? 'bg-slate-700 text-slate-400 cursor-wait'
+                                    : pkg.popular
+                                        ? 'bg-primary text-black hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
                                     }`}
                             >
                                 {loading === pkg.id ? (

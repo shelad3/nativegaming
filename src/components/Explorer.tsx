@@ -73,7 +73,7 @@ const Explorer: React.FC<ExplorerProps> = ({ currentUser, onNavigateProfile }) =
             placeholder="SCAN_MESH_FOR_OPERATORS..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface border border-white/10 rounded-2xl pl-12 pr-6 py-5 font-mono text-sm text-white focus:border-primary focus:outline-none transition-all placeholder:text-slate-800"
+            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl pl-12 pr-6 py-5 font-mono text-sm text-[var(--text-primary)] focus:border-[var(--primary)] focus:outline-none transition-all placeholder:text-[var(--text-muted)] scale-shadow-[0_0_20px_var(--glow-primary)]"
           />
         </div>
       </div>
@@ -117,28 +117,28 @@ const Explorer: React.FC<ExplorerProps> = ({ currentUser, onNavigateProfile }) =
             <div
               key={u.id}
               onClick={() => onNavigateProfile(u.id)}
-              className="bg-surface/50 border border-white/5 rounded-3xl p-6 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group"
+              className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] p-6 hover:border-[var(--primary)] hover:bg-[var(--primary-faded)] transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full border-2 border-primary/20 p-1 group-hover:border-primary transition-colors overflow-hidden">
+                <div className="w-16 h-16 rounded-full border-2 border-[var(--primary)] p-1 group-hover:border-[var(--primary)] transition-colors overflow-hidden">
                   <img src={u.avatar} alt={u.username} className="w-full h-full object-cover rounded-full" />
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <h3 className="text-lg font-orbitron font-bold text-white uppercase truncate">{u.username}</h3>
-                  <p className="text-[10px] font-mono text-primary uppercase tracking-widest truncate">{u.archetype || 'GHOST_OPERATOR'}</p>
+                  <p className="text-[10px] font-mono text-[var(--primary)] uppercase tracking-widest truncate">{u.archetype || 'GHOST_OPERATOR'}</p>
                 </div>
               </div>
               <div className="mt-6">
-                <p className="text-xs text-slate-500 font-mono line-clamp-2 italic mb-4">"{u.bio}"</p>
-                <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                <p className="text-xs text-[var(--text-muted)] font-mono line-clamp-2 italic mb-4">"{u.bio}"</p>
+                <div className="flex justify-between items-center pt-4 border-t border-[var(--border-subtle)]">
                   <div className="flex gap-4">
                     <div className="text-center">
                       <p className="text-xs font-bold text-white">{u.followers.length}</p>
-                      <p className="text-[8px] font-mono text-slate-600 uppercase">Followers</p>
+                      <p className="text-[8px] font-mono text-[var(--text-muted)] uppercase">Followers</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs font-bold text-white">{u.stats.rating}</p>
-                      <p className="text-[8px] font-mono text-slate-600 uppercase">Rating</p>
+                      <p className="text-[8px] font-mono text-[var(--text-muted)] uppercase">Rating</p>
                     </div>
                   </div>
                   <button
@@ -146,7 +146,7 @@ const Explorer: React.FC<ExplorerProps> = ({ currentUser, onNavigateProfile }) =
                     disabled={followLoading === u.id}
                     className={`px-4 py-1.5 border text-[10px] font-mono rounded transition-all uppercase flex items-center gap-2 ${currentUser.following.includes(u.id)
                       ? 'bg-white/5 border-white/20 text-slate-400'
-                      : 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
+                      : 'bg-[var(--primary-faded)] border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-black'
                       }`}
                   >
                     {followLoading === u.id ? <div className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div> : (currentUser.following.includes(u.id) ? 'LINKED' : 'LINK_NODE')}

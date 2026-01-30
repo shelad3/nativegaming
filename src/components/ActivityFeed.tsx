@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getIcon } from '../constants';
-import { User as UserType } from '../types';
+import { api } from '../services/api';
 
 interface Activity {
     _id: string;
@@ -37,11 +37,10 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ userId, title = "Tactical_F
     useEffect(() => {
         const fetchFeed = async () => {
             try {
-                let url = `http://localhost:5000/api/social/feed?limit=${limit}`;
-                if (filter === 'following' && userId) url += `&userId=${userId}`;
+                let path = `/social/feed?limit=${limit}`;
+                if (filter === 'following' && userId) path += `&userId=${userId}`;
 
-                const response = await fetch(url);
-                const data = await response.json();
+                const { data } = await api.get(path);
                 setActivities(data);
             } catch (err) {
                 console.error('[FEED] Fetch error:', err);
@@ -51,8 +50,6 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ userId, title = "Tactical_F
         };
 
         fetchFeed();
-
-        // Refresh every 60 seconds
         const interval = setInterval(fetchFeed, 60000);
         return () => clearInterval(interval);
     }, [userId, limit, filter]);

@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Build files (will be built on Vercel)
+dist/
+build/
+
+# Server files (not needed for frontend deployment)
+server/
+
+# Development files
+.vscode/
+.idea/
+*.log
+
+# Test files
+coverage/
+*.test.ts
+*.spec.ts
+
+# Documentation (optional - include if you want)
+*.md
+!README.md
+
+# Git files
+.git/
+.gitignore

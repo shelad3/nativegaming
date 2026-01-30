@@ -7,7 +7,7 @@ import { backendService } from '../services/backendService';
 interface Theme {
     _id: string;
     name: string;
-    type: 'banner' | 'animation' | 'effect' | 'bundle';
+    type: 'banner' | 'animation' | 'effect' | 'font' | 'profile' | 'bundle';
     price: number;
     description: string;
     previewUrl: string;
@@ -52,7 +52,12 @@ const ThemeStore: React.FC<ThemeStoreProps> = ({ user, onUpdateUser, onClose }) 
         try {
             const updatedUser = await backendService.purchaseTheme(user.id, theme._id);
             onUpdateUser(updatedUser);
-            alert(`${theme.name} protocol acquired. Syncing with inventory...`);
+
+            if (window.confirm(`${theme.name} protocol acquired. Apply identity override immediately?`)) {
+                const refreshed = await backendService.applyTheme(user.id, theme._id, theme.type);
+                onUpdateUser(refreshed);
+                alert("Neural Interface Synchronized.");
+            }
         } catch (err) {
             alert('Connection to store node lost.');
         } finally {
@@ -91,7 +96,7 @@ const ThemeStore: React.FC<ThemeStoreProps> = ({ user, onUpdateUser, onClose }) 
 
                 {/* Filters */}
                 <div className="flex gap-2 mb-8 shrink-0">
-                    {['All', 'Banner', 'Animation', 'Bundle'].map(f => (
+                    {['All', 'Banner', 'Animation', 'Effect', 'Font', 'Profile', 'Bundle'].map(f => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
@@ -139,7 +144,14 @@ const ThemeStore: React.FC<ThemeStoreProps> = ({ user, onUpdateUser, onClose }) 
                                                     {theme.rarity}
                                                 </span>
                                             </div>
-                                            <div className="absolute bottom-3 right-3">
+                                            <div className="absolute bottom-3 right-3 flex gap-2">
+                                                {theme.assets?.colors && (
+                                                    <div className="flex gap-1 p-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.assets.colors.primary }} title="Primary"></div>
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.assets.colors.secondary }} title="Secondary"></div>
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.assets.colors.accent }} title="Accent"></div>
+                                                    </div>
+                                                )}
                                                 <span className="px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[8px] font-mono text-primary border border-white/10 uppercase">
                                                     {theme.type}
                                                 </span>
@@ -155,14 +167,20 @@ const ThemeStore: React.FC<ThemeStoreProps> = ({ user, onUpdateUser, onClose }) 
                                                 <span className="text-lg font-mono font-bold text-amber-500">{theme.price.toLocaleString()} Ȼ</span>
                                             </div>
                                             <button
-                                                onClick={() => !isOwned && handlePurchase(theme)}
-                                                disabled={isOwned || purchasing === theme._id}
+                                                onClick={() => {
+                                                    if (!isOwned) {
+                                                        handlePurchase(theme);
+                                                    } else {
+                                                        backendService.applyTheme(user.id, theme._id, theme.type).then(onUpdateUser).then(() => alert("Theme Equipped."));
+                                                    }
+                                                }}
+                                                disabled={purchasing === theme._id}
                                                 className={`flex-1 py-4 rounded-xl font-orbitron font-bold text-[10px] uppercase tracking-widest transition-all ${isOwned
-                                                    ? 'bg-slate-900 border border-slate-700 text-slate-500 cursor-default'
+                                                    ? 'bg-slate-900 border border-slate-700 text-primary hover:border-primary hover:bg-primary/10'
                                                     : 'bg-primary text-black hover:bg-accent shadow-lg shadow-primary/10 hover:shadow-primary/30'
                                                     }`}
                                             >
-                                                {purchasing === theme._id ? 'SYNCING...' : isOwned ? 'OWNED_ASSET' : 'ACQUIRE_PROTOCOL'}
+                                                {purchasing === theme._id ? 'SYNCING...' : isOwned ? 'EQUIP' : 'ACQUIRE_PROTOCOL'}
                                             </button>
                                         </div>
                                     </motion.div>

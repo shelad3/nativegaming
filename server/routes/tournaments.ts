@@ -37,6 +37,20 @@ router.post('/', adminAuth, async (req, res) => {
     }
 });
 
+// POST /api/tournaments/test - Create tournament (No auth for testing)
+router.post('/test', async (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(404).json({ error: 'Not found' });
+    }
+    try {
+        const tournament = await Tournament.create(req.body);
+        res.status(201).json(tournament);
+    } catch (err) {
+        console.error('[TOURNAMENT] Creation error:', err);
+        res.status(500).json({ error: 'Creation failure', details: err.message });
+    }
+});
+
 // POST /api/tournaments/register - Register for a tournament
 router.post('/register', async (req, res) => {
     const { userId, tournamentId } = req.body;
@@ -47,12 +61,12 @@ router.post('/register', async (req, res) => {
         const tournament = await Tournament.findById(tournamentId);
         if (!tournament) return res.status(404).json({ error: 'Tournament node not found in registry.' });
 
-        if (tournament.participants.includes(userId)) {
+        if (tournament.participants.some((p: any) => p.toString() === userId)) {
             return res.json(user); // Already registered
         }
 
         // Atomic update for both participants and user registration
-        tournament.participants.push(userId);
+        tournament.participants.push(user._id);
         await tournament.save();
 
         if (!user.registeredTournaments) user.registeredTournaments = [];

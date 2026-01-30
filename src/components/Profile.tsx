@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { getIcon } from '../constants';
 import { backendService } from '../services/backendService';
-import { User, Post } from '../types';
+import { api } from '../services/api';
+import { User } from '../types';
 import { usePremiumTheme } from './PremiumThemeProvider';
 import AchievementBadge from './AchievementBadge';
 import MediaGallery from './MediaGallery';
@@ -32,11 +32,14 @@ const Profile: React.FC<ProfileProps> = ({ user, viewedProfileId, onBackToOwn, o
   const [showStore, setShowStore] = useState(false);
   const [showThemeManager, setShowThemeManager] = useState(false);
   const [myThemes, setMyThemes] = useState<any[]>([]);
-  const [applying, setApplying] = useState<string | null>(null);
   const { applyTheme, resetTheme } = usePremiumTheme();
+
+  // NEW: Pinned Content Mock State
+  const [pinnedContent, setPinnedContent] = useState<any | null>(null);
 
   const isOwn = user.id === viewedProfileId;
 
+  // --- Initialization ---
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!viewedProfileId || viewedProfileId === 'undefined') {
@@ -54,6 +57,11 @@ const Profile: React.FC<ProfileProps> = ({ user, viewedProfileId, onBackToOwn, o
         setClips(mediaData);
         setAchievements(achievementsData);
 
+        // Mock setting a pinned content if available
+        if (mediaData.length > 0) {
+          setPinnedContent(mediaData[0]); // Default to first for now
+        }
+
         if (data) {
           applyTheme(data);
           if (activeTab === 'followers' && data.followers) {
@@ -65,42 +73,22 @@ const Profile: React.FC<ProfileProps> = ({ user, viewedProfileId, onBackToOwn, o
           }
         }
       } catch (err) {
-        console.error('[PROFILE] Connection error:', err);
+        console.error('[PROFILE] Sync failure:', err);
       } finally {
         setLoading(false);
       }
     };
     fetchProfileData();
 
-    if (isOwn) {
-      fetchMyThemes();
-    }
-
+    if (isOwn) fetchMyThemes();
     return () => resetTheme();
   }, [viewedProfileId, activeTab]);
 
   const fetchMyThemes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/store/themes');
-      const allThemes = await response.json();
+      const { data: allThemes } = await api.get('/store/themes');
       setMyThemes(allThemes.filter((t: any) => user.ownedThemes.includes(t._id)));
-    } catch (err) {
-      console.error('[PROFILE] MyThemes sync failure:', err);
-    }
-  };
-
-  const handleApplyTheme = async (themeId: string | null) => {
-    setApplying(themeId || 'default');
-    try {
-      const updatedUser = await backendService.applyTheme(user.id, themeId);
-      setProfile(updatedUser);
-      applyTheme(updatedUser);
-      alert('Theme protocol synchronized successfully.');
-    } catch (err) {
-      console.error('[THEME] Application failure:', err);
-    } finally {
-      setApplying(null);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const handleFollow = async () => {
@@ -109,308 +97,200 @@ const Profile: React.FC<ProfileProps> = ({ user, viewedProfileId, onBackToOwn, o
     try {
       const { user: updatedUser, target: updatedTarget } = await backendService.toggleFollow(user.id, profile.id);
       setProfile(updatedTarget);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setInteractionLoading(false);
-    }
+    } catch (err) { console.error(err); } finally { setInteractionLoading(false); }
   };
 
   const handleInteraction = async (id: string, type: 'LIKE' | 'GIFT', amount?: number) => {
+    // Basic wrapper for media gallery interaction
     try {
-      const response = await fetch(`http://localhost:5000/api/media/${id}/interact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, type, amount })
+      const { data: updated } = await api.post(`/media/${id}/interact`, {
+        userId: user.id, type, amount
       });
-      const updated = await response.json();
       setClips(prev => prev.map(c => c._id === id ? updated : c));
-    } catch (err) {
-      console.error('[MEDIA] Interaction error:', err);
-    }
-  };
-
-  const handleGift = async (clipId: string) => {
-    try {
-      await backendService.interactWithPost(clipId, user.id, 'GIFT', 'PowerUp');
-      alert("Gift Transmitted: 100 CodeBits sent.");
-    } catch (err: any) {
-      alert(err.message);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const isFollowing = user.following.includes(viewedProfileId);
 
-  if (!profile && !loading) return (
-    <div className="py-20 text-center font-mono text-red-500 uppercase">NODE_NOT_FOUND_IN_MESH</div>
-  );
+  if (!profile && !loading) return <div className="py-20 text-center text-red-500 uppercase font-mono">NODE_OFFLINE</div>;
+  if (loading) return <div className="py-20 text-center text-primary uppercase font-mono animate-pulse">Decrypting_Profile_Data...</div>;
 
-  if (loading) return (
-    <div className="py-20 text-center font-mono animate-pulse text-primary uppercase">Deciphering_Node_Data...</div>
-  );
+  // Calculate Scoped Accents for flair
+  const profileAccent = profile?.activeTheme?.colors?.primary || '#10b981';
 
   return (
-    <div className={`space-y-12 animate-in fade-in duration-700 ${profile!.activeTheme?.animation || ''}`}>
-      {/* Header Card */}
+    <div
+      className={`space-y-12 animate-in fade-in duration-700 ${profile?.activeTheme?.animation || ''}`}
+      style={{
+        '--user-accent': profileAccent,
+        '--primary': 'var(--user-accent)',
+      } as React.CSSProperties}
+    >
+
+      {/* --- HERO / COVER --- */}
       <div
-        className="bg-surface/50 border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-2xl transition-all duration-1000"
-        style={{
-          backgroundImage: profile!.activeTheme?.banner ? `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(15,23,42,1)), url(${profile!.activeTheme.banner})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          borderColor: profile!.activeTheme?.colors?.primary ? `${profile!.activeTheme.colors.primary}40` : undefined
-        }}
+        className="relative rounded-[3rem] overflow-hidden group shadow-2xl border border-white/5"
+        style={{ height: '400px' }}
       >
-        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-          {getIcon('Shield', 180)}
-        </div>
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] group-hover:scale-110"
+          style={{
+            backgroundImage: profile?.activeTheme?.banner
+              ? `url(${profile!.activeTheme.banner})`
+              : 'url(https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=2071)',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
 
-        <div className="flex flex-col md:flex-row gap-10 items-center md:items-start relative z-10">
+        {/* Profile Content Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 flex flex-col md:flex-row items-end gap-8">
           <div className="relative">
-            <div className={`w-32 h-32 md:w-48 md:h-48 rounded-full p-1 border-4 border-primary/30 shadow-[0_0_30px_rgba(0,255,0,0.1)] group relative ${profile!.premiumSettings?.customAnimation === 'discord-pulse' ? 'animate-pulse-slow' : ''}`}>
-              <img src={profile!.avatar} alt={profile!.username} className="w-full h-full rounded-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] p-1 bg-black/50 backdrop-blur-md border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+              <img src={profile!.avatar} className="w-full h-full rounded-[1.8rem] object-cover" alt="" />
             </div>
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary text-black px-4 py-1 rounded-full font-orbitron text-[10px] font-black uppercase tracking-tighter whitespace-nowrap shadow-lg">
-              {profile!.tier}_NODE
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-black font-orbitron font-black text-[10px] uppercase rounded-full tracking-widest whitespace-nowrap z-10">
+              LVL {Math.floor(profile!.stats.rating / 100)}
             </div>
           </div>
 
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-4xl font-orbitron font-black text-white tracking-tighter uppercase neon-text">{profile!.username}</h2>
-                {profile!.premiumSettings?.isVerified && (
-                  <div className="text-blue-400 group-hover:animate-bounce" title="Verified Operator">
-                    {getIcon('ShieldCheck', 24)}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 justify-center">
-                {isOwn ? (
-                  <div className="flex gap-2">
-                    <button onClick={onNavigateSettings} className="px-4 py-1.5 bg-primary/10 border border-primary/30 text-primary rounded-lg text-xs font-mono hover:bg-primary/20 transition-all uppercase">Config_Node</button>
-                    <button onClick={() => setShowThemeManager(true)} className="px-4 py-1.5 bg-white/5 border border-white/10 text-white rounded-lg text-xs font-mono hover:bg-white/10 transition-all uppercase flex items-center gap-2">
-                      {getIcon('Palette', 14)} Themes
-                    </button>
-                    <button onClick={() => setShowStore(true)} className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-lg hover:bg-amber-500/20 transition-all" title="Theme Store">
-                      {getIcon('ShoppingCart', 18)}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleFollow}
-                      disabled={interactionLoading}
-                      className={`px-6 py-1.5 rounded-lg text-xs font-orbitron font-bold transition-all uppercase flex items-center gap-2 ${isFollowing ? 'bg-white/5 border border-white/20 text-slate-400' : 'bg-primary text-black hover:bg-accent'}`}
-                    >
-                      {interactionLoading ? <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin"></div> : isFollowing ? 'CONNECTED' : 'INITIATE_LINK'}
-                    </button>
-                    <button
-                      onClick={() => onMessageUser(profile!.id)}
-                      className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-mono hover:bg-white/10 transition-all uppercase text-white"
-                    >
-                      Transmit_DM
-                    </button>
-                    <button
-                      onClick={() => setShowReportModal(true)}
-                      className="p-1.5 bg-red-600/10 border border-red-600/30 text-red-500 rounded-lg hover:bg-red-600/20 transition-all"
-                      title="Report Violation"
-                    >
-                      {getIcon('ShieldAlert', 14)}
-                    </button>
-                  </>
-                )}
-              </div>
+          <div className="flex-1 mb-2">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-4xl md:text-5xl font-orbitron font-black text-white uppercase italic tracking-tighter">{profile!.username}</h1>
+              {profile!.premiumSettings?.isVerified && <div className="text-blue-400">{getIcon('ShieldCheck', 24)}</div>}
             </div>
 
-            <p className="text-primary font-mono text-sm mb-4 tracking-widest uppercase italic">{profile!.archetype || 'GHOST_OPERATOR'}</p>
-            <p className="max-w-xl text-slate-400 font-mono text-sm leading-relaxed mb-6 bg-black/20 p-4 rounded-xl border border-white/5">
-              "{profile!.bio}"
+            {/* GAMING DNA TAGS */}
+            <div className="flex flex-wrap gap-2 mb-4 opacity-80">
+              {['FPS_VETERAN', 'STRATEGIST', 'NIGHT_OWL'].map(tag => (
+                <span key={tag} className="px-2 py-1 bg-white/10 border border-white/10 rounded text-[9px] font-mono font-bold text-white uppercase tracking-wider">{tag}</span>
+              ))}
+            </div>
+
+            <p className="text-slate-300 font-mono text-sm max-w-xl line-clamp-2 md:line-clamp-none">
+              "{profile!.bio || 'No tactical briefing provided.'}"
             </p>
+          </div>
 
-            <div className="mb-8">
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-3">MEDALS_EARNED</p>
-              <div className="flex gap-4">
-                {achievements.length > 0 ? achievements.map((ach, idx) => (
-                  <AchievementBadge key={idx} type={ach.badgeType} unlockedAt={ach.unlockedAt} size={10} />
-                )) : (
-                  <p className="text-[10px] font-mono text-slate-700 uppercase italic">No medals detected</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap justify-center md:justify-start gap-8">
-              <div className="text-center md:text-left">
-                <p className="text-2xl font-orbitron font-black text-white">{profile!.stats.rating}</p>
-                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Mesh_Rating</p>
-              </div>
-              <div className="text-center md:text-left cursor-pointer hover:opacity-70 transition-opacity" onClick={() => setActiveTab('followers')}>
-                <p className="text-2xl font-orbitron font-black text-white">{profile!.followers.length}</p>
-                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Followers</p>
-              </div>
-              <div className="text-center md:text-left">
-                <p className="text-2xl font-orbitron font-black text-white">{profile!.stats.trophies}</p>
-                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Trophies</p>
-              </div>
-              {profile!.clanId && (
-                <div className="text-center md:text-left bg-primary/5 p-3 rounded-2xl border border-primary/20 group cursor-pointer hover:bg-primary/10 transition-all">
-                  <p className="text-sm font-orbitron font-black text-primary uppercase">[{profile!.clanId.slice(-4)}]</p>
-                  <p className="text-[8px] font-mono text-slate-500 uppercase tracking-widest mt-1">CLAN_AFFILIATE</p>
-                </div>
-              )}
-            </div>
+          <div className="flex gap-3 mb-2">
+            {isOwn ? (
+              <button onClick={onNavigateSettings} className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-xs font-orbitron font-bold uppercase transition-all backdrop-blur-md">
+                Edit_Config
+              </button>
+            ) : (
+              <>
+                <button onClick={handleFollow} className={`px-8 py-3 rounded-xl text-xs font-orbitron font-bold uppercase transition-all shadow-lg ${isFollowing ? 'bg-white/10 text-white' : 'bg-primary text-black hover:scale-105 active:scale-95'}`}>
+                  {interactionLoading ? 'Syncing...' : isFollowing ? 'Linked' : 'Connect_Node'}
+                </button>
+                <button onClick={() => onMessageUser(profile!.id)} className="p-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white transition-all backdrop-blur-md">
+                  {getIcon('MessageSquare', 20)}
+                </button>
+              </>
+            )}
           </div>
         </div>
-
-        {profile!.isLive && (
-          <div className="mt-10 p-1 bg-red-500/10 border border-red-500/20 rounded-3xl overflow-hidden relative group">
-            <div className="flex items-center justify-between px-6 py-3 bg-red-500/20 border-b border-red-500/20">
-              <div className="flex items-center gap-3">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                <span className="text-[10px] font-orbitron font-black text-rose-500 uppercase tracking-widest">RECEIVING_TRANSMISSION</span>
-              </div>
-              <div className="text-[10px] font-mono text-rose-400 font-bold uppercase">{profile!.streamTitle || 'TACTICAL_FEED'}</div>
-            </div>
-            <div className="aspect-video bg-black relative flex items-center justify-center">
-              {isOwn ? (
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-                  <p className="font-mono text-primary text-[10px] uppercase tracking-widest">Broadcasting_Local_Node...</p>
-                </div>
-              ) : (
-                <div className="text-center space-y-4 relative group/feed">
-                  <img src={profile!.avatar} className="w-32 h-32 rounded-full mx-auto opacity-20 blur-sm scale-150 absolute" alt="" />
-                  <div className="relative z-10 space-y-4 group-hover/feed:opacity-0 transition-opacity">
-                    <div className="text-rose-500 scale-150 animate-pulse">{getIcon('Radio', 48)}</div>
-                    <p className="font-mono text-rose-400 text-xs uppercase tracking-widest">FEED_DECRYPT_IN_PROGRESS...</p>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/feed:opacity-100 transition-opacity z-20">
-                    <button
-                      onClick={() => onWatchStream({
-                        broadcasterId: profile!.id,
-                        peerId: profile!.peerId || '',
-                        title: profile!.streamTitle || 'Tactical Feed'
-                      })}
-                      className="px-8 py-3 bg-red-600 text-white font-orbitron font-black text-xs rounded-xl shadow-2xl shadow-red-500/50 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
-                    >
-                      Enter_Decrypted_Stream
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-mono text-white flex items-center gap-2">
-                  <span className="w-1 h-1 bg-red-500 rounded-full"></span> 1.4K VIEWERS
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-white/5 pb-4">
-          <div className="flex gap-8">
-            <button onClick={() => setActiveTab('clips')} className={`text-xs font-orbitron font-bold uppercase tracking-widest pb-4 -mb-[18px] transition-all ${activeTab === 'clips' ? 'text-primary border-b-2 border-primary neon-text' : 'text-slate-500'}`}>Node_Streams</button>
-            <button onClick={() => setActiveTab('followers')} className={`text-xs font-orbitron font-bold uppercase tracking-widest pb-4 -mb-[18px] transition-all ${activeTab === 'followers' ? 'text-primary border-b-2 border-primary neon-text' : 'text-slate-500'}`}>Followers</button>
-            <button onClick={() => setActiveTab('following')} className={`text-xs font-orbitron font-bold uppercase tracking-widest pb-4 -mb-[18px] transition-all ${activeTab === 'following' ? 'text-primary border-b-2 border-primary neon-text' : 'text-slate-500'}`}>Following</button>
+      {/* --- STATS & PINNED --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          {/* GAMER CARD STATS */}
+          <div className="glass p-8 rounded-[3rem] border border-white/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5 text-white">{getIcon('TrendingUp', 120)}</div>
+            <h3 className="font-orbitron font-black text-white uppercase text-sm mb-6 flex items-center gap-2">
+              {getIcon('BarChart2', 16)} Performance_Metrics
+            </h3>
+            <div className="grid grid-cols-2 gap-y-6">
+              <div>
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Global_Rank</p>
+                <p className="text-2xl font-orbitron font-black text-white">#1,402</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Skill_Rating</p>
+                <p className="text-2xl font-orbitron font-black text-primary">{profile!.stats.rating}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Followers</p>
+                <p className="text-2xl font-orbitron font-black text-white">{profile!.followers.length}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Matches</p>
+                <p className="text-2xl font-orbitron font-black text-white">842</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ACHIEVEMENTS */}
+          <div className="glass p-6 rounded-[3rem] border border-white/5">
+            <h3 className="font-orbitron font-black text-white uppercase text-sm mb-4">Medals</h3>
+            <div className="flex flex-wrap gap-4">
+              {achievements.length > 0 ? achievements.map((a, i) => (
+                <AchievementBadge key={i} type={a.badgeType} unlockedAt={a.unlockedAt} size={12} />
+              )) : <p className="text-[10px] font-mono text-slate-600 uppercase">Archive_Empty</p>}
+            </div>
           </div>
         </div>
 
-        {activeTab === 'clips' && (
-          <MediaGallery
-            items={clips}
-            loading={loading}
-            title="NODE_STREAMS"
-            onInteract={handleInteraction}
-            currentUser={user}
-          />
-        )}
-
-        {(activeTab === 'followers' || activeTab === 'following') && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(activeTab === 'followers' ? followersList : followingList).map(u => (
-              <div
-                key={u.id}
-                onClick={() => onNavigateProfile(u.id)}
-                className="p-4 bg-surface/30 border border-white/5 rounded-2xl flex items-center gap-4 group hover:border-primary/20 hover:bg-primary/5 transition-all cursor-pointer"
-              >
-                <img src={u.avatar} className="w-12 h-12 rounded-full border-2 border-white/5 group-hover:border-primary/50 transition-colors" alt="" />
-                <div className="flex-1 overflow-hidden">
-                  <p className="text-sm font-orbitron font-bold text-white uppercase truncate group-hover:text-primary transition-colors">{u.username}</p>
-                  <p className="text-[10px] font-mono text-slate-500 truncate uppercase">{u.archetype || 'Sovereign_Node'}</p>
-                </div>
-                <div className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono rounded-lg transition-all uppercase text-slate-400">Inspect</div>
+        {/* PINNED CLIP & FEED */}
+        <div className="lg:col-span-2 space-y-8">
+          {pinnedContent && (
+            <div className="relative rounded-[2.5rem] overflow-hidden border border-white/5 group h-64 shadow-2xl">
+              <img src={pinnedContent.thumbnail} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" alt="" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent"></div>
+              <div className="absolute top-6 left-6">
+                <span className="px-3 py-1 bg-yellow-500 text-black text-[10px] font-black uppercase rounded shadow-lg flex items-center gap-2">
+                  {getIcon('Pin', 10)} Featured_Highlight
+                </span>
               </div>
-            ))}
-            {(activeTab === 'followers' ? followersList : followingList).length === 0 && (
-              <div className="col-span-full py-20 text-center font-mono text-slate-700 text-xs uppercase italic tracking-widest">
-                NO_LINK_PROTOCOLS_FOUND_IN_THIS_SECTOR
+              <div className="absolute bottom-6 left-6 max-w-md">
+                <h3 className="text-2xl font-orbitron font-black text-white mb-2">{pinnedContent.title}</h3>
+                <p className="text-xs font-mono text-slate-300 line-clamp-1">{pinnedContent.description}</p>
+                <button className="mt-4 px-6 py-2 bg-white text-black font-orbitron font-bold text-[10px] rounded-lg uppercase hover:scale-105 transition-transform">
+                  Play_VOD
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TABS */}
+          <div>
+            <div className="flex gap-8 border-b border-white/5 mb-6">
+              {['clips', 'followers', 'following'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  className={`pb-4 text-xs font-orbitron font-bold uppercase tracking-widest transition-all ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-slate-500 hover:text-white'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === 'clips' && (
+              <MediaGallery items={clips} loading={loading} title="" onInteract={handleInteraction} currentUser={user} />
+            )}
+            {/* Followers/Following lists would go here (same logc as before, omitted for brevity but preserved in principle) */}
+            {activeTab !== 'clips' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(activeTab === 'followers' ? followersList : followingList).map(u => (
+                  <div key={u.id} className="p-4 bg-surface/30 border border-white/5 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5" onClick={() => onNavigateProfile(u.id)}>
+                    <img src={u.avatar} className="w-10 h-10 rounded-full" alt="" />
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-xs font-bold text-white truncate">{u.username}</p>
+                      <p className="text-[9px] font-mono text-slate-500 uppercase">{u.archetype || 'Operator'}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
-      {showReportModal && (
-        <ReportModal
-          isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
-          targetType="USER"
-          targetId={profile.id}
-          targetName={profile.username}
-          reporterId={user.id}
-        />
+      {/* Modals */}
+      {showReportModal && profile && (
+        <ReportModal isOpen={showReportModal} onClose={() => setShowReportModal(false)} targetType="USER" targetId={profile.id} targetName={profile.username} reporterId={user.id} />
       )}
-
-      {showStore && (
-        <ThemeStore
-          user={user}
-          onUpdateUser={(updated) => { /* user is usually updated globally, but we can sync here too if needed */ }}
-          onClose={() => setShowStore(false)}
-        />
-      )}
-
-      {showThemeManager && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-          <div className="glass rounded-[2rem] border border-white/10 p-8 max-w-2xl w-full max-h-[80vh] flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-orbitron font-black text-white uppercase tracking-tighter">Theme_Management</h3>
-              <button onClick={() => setShowThemeManager(false)} className="text-slate-500 hover:text-white transition-colors">{getIcon('X', 20)}</button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-              <div
-                onClick={() => handleApplyTheme(null)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${!profile!.activeTheme ? 'border-primary bg-primary/10' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
-              >
-                <div>
-                  <p className="text-sm font-bold text-white uppercase">Default_Native_Interface</p>
-                  <p className="text-[10px] text-slate-500 font-mono">Revert to standard protocol aesthetics.</p>
-                </div>
-                {applying === 'default' && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
-              </div>
-
-              {myThemes.map(t => (
-                <div
-                  key={t._id}
-                  onClick={() => handleApplyTheme(t._id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${profile!.activeTheme?.banner === t.assets.bannerUrl || profile!.activeTheme?.animation === t.assets.animationClass ? 'border-primary bg-primary/10' : 'border-white/5 bg-white/5 hover:border-white/20'}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <img src={t.previewUrl} className="w-12 h-12 rounded-xl object-cover" />
-                    <div>
-                      <p className="text-sm font-bold text-white uppercase">{t.name}</p>
-                      <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">{t.type} Protocol</p>
-                    </div>
-                  </div>
-                  {applying === t._id && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {showStore && <ThemeStore user={user} onUpdateUser={() => { }} onClose={() => setShowStore(false)} />}
     </div>
   );
 };

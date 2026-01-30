@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IConversation extends Document {
-    participants: string[]; // User IDs
+    participants: mongoose.Types.ObjectId[]; // User IDs
     lastMessage?: mongoose.Types.ObjectId;
     lastActivity: Date;
     unreadCounts: Map<string, number>; // UserID -> count

@@ -8,7 +8,7 @@ export interface ITournament extends Document {
     startDate: Date;
     endDate?: Date;
     maxParticipants: number;
-    participants: string[]; // User IDs
+    participants: mongoose.Types.ObjectId[]; // User IDs
     bracket?: any; // To be structured later
     createdAt: Date;
     updatedAt: Date;

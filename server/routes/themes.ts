@@ -40,13 +40,27 @@ router.post('/store/purchase-theme', async (req, res) => {
 
 // Apply theme
 router.post('/user/apply-theme', async (req, res) => {
-    const { userId, themeId } = req.body;
+    const { userId, themeId, slot } = req.body as { userId: string; themeId: string | null; slot?: string };
     try {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         if (themeId === null) {
-            user.activeTheme = undefined;
+            if (!slot) {
+                user.activeTheme = undefined;
+            } else {
+                user.activeTheme = user.activeTheme || ({} as any);
+                if (slot === 'banner') user.activeTheme.banner = undefined;
+                if (slot === 'animation') user.activeTheme.animation = undefined;
+                if (slot === 'effect') user.activeTheme.effect = undefined;
+                if (slot === 'font') {
+                    user.activeTheme.fontFamily = undefined;
+                    user.activeTheme.fontUrl = undefined;
+                }
+                if (slot === 'profile') user.activeTheme.profileEffect = undefined;
+                if (slot === 'colors') user.activeTheme.colors = undefined;
+                if (slot === 'bundle') user.activeTheme = undefined;
+            }
             await user.save();
             return res.json(user);
         }
@@ -58,12 +72,33 @@ router.post('/user/apply-theme', async (req, res) => {
         const theme = await Theme.findById(themeId);
         if (!theme) return res.status(404).json({ error: 'Theme not found' });
 
-        user.activeTheme = {
-            banner: theme.assets.bannerUrl,
-            animation: theme.assets.animationClass,
-            effect: theme.assets.customCSS,
-            colors: theme.assets.colors
-        };
+        const resolvedSlot = slot || theme.type;
+        if (!user.activeTheme || resolvedSlot === 'bundle') {
+            user.activeTheme = user.activeTheme || ({} as any);
+        }
+
+        if (resolvedSlot === 'bundle') {
+            user.activeTheme = {
+                banner: theme.assets.bannerUrl,
+                animation: theme.assets.animationClass,
+                effect: theme.assets.customCSS,
+                fontFamily: theme.assets.fontFamily,
+                fontUrl: theme.assets.fontUrl,
+                profileEffect: theme.assets.profileEffect,
+                colors: theme.assets.colors
+            } as any;
+        } else {
+            user.activeTheme = user.activeTheme || ({} as any);
+            if (resolvedSlot === 'banner') user.activeTheme.banner = theme.assets.bannerUrl;
+            if (resolvedSlot === 'animation') user.activeTheme.animation = theme.assets.animationClass;
+            if (resolvedSlot === 'effect') user.activeTheme.effect = theme.assets.customCSS;
+            if (resolvedSlot === 'font') {
+                user.activeTheme.fontFamily = theme.assets.fontFamily;
+                user.activeTheme.fontUrl = theme.assets.fontUrl;
+            }
+            if (resolvedSlot === 'profile') user.activeTheme.profileEffect = theme.assets.profileEffect;
+            if (resolvedSlot === 'colors') user.activeTheme.colors = theme.assets.colors;
+        }
 
         await user.save();
         res.json(user);

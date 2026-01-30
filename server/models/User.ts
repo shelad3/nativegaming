@@ -5,6 +5,7 @@ export interface IUser extends Document {
   username: string;
   email: string;
   googleId?: string;
+  password?: string;
   avatar: string;
   tier: string;
   codeBits: number;
@@ -41,7 +42,7 @@ export interface IUser extends Document {
     profileEffect: string;
   };
   audit_logs: any[];
-  status: 'active' | 'banned';
+  status: 'active' | 'banned' | 'pending';
   isOnline: boolean;
   lastActive?: Date;
   isLive: boolean;
@@ -50,6 +51,7 @@ export interface IUser extends Document {
   isAdmin: boolean;
   isEmailVerified: boolean;
   verificationCode?: string;
+  verificationExpires?: Date;
   inventory: string[];
   registeredTournaments: string[];
   clanId?: string;
@@ -64,6 +66,9 @@ export interface IUser extends Document {
     banner?: string;
     animation?: string;
     effect?: string;
+    fontFamily?: string;
+    fontUrl?: string;
+    profileEffect?: string;
     colors?: {
       primary?: string;
       secondary?: string;
@@ -78,7 +83,7 @@ const UserSchema: Schema = new Schema({
   googleId: { type: String, unique: true, sparse: true },
   avatar: { type: String },
   tier: { type: String, default: 'FREE' },
-  codeBits: { type: Number, default: 1000 },
+  codeBits: { type: Number, default: 500 },
   stats: {
     rating: { type: Number, default: 1200 },
     winRate: { type: String, default: '0%' },
@@ -105,6 +110,38 @@ const UserSchema: Schema = new Schema({
       lowLatency: { type: Boolean, default: true },
       allowChat: { type: Boolean, default: true },
       showViewers: { type: Boolean, default: true }
+    },
+    // Settings 3.0 Additions
+    connections: {
+      discord: {
+        connected: { type: Boolean, default: false },
+        id: { type: String, default: '' },
+        username: { type: String, default: '' }
+      },
+      steam: {
+        connected: { type: Boolean, default: false },
+        id: { type: String, default: '' },
+        username: { type: String, default: '' }
+      },
+      twitch: {
+        connected: { type: Boolean, default: false },
+        id: { type: String, default: '' },
+        username: { type: String, default: '' }
+      }
+    },
+    gameplay: {
+      region: { type: String, default: 'TOKYO (JP)' },
+      crossplay: { type: Boolean, default: true },
+      streamerMode: { type: Boolean, default: false }
+    },
+    security: {
+      twoFactor: { type: Boolean, default: false },
+      activeSessions: [{
+        id: { type: String },
+        device: { type: String },
+        location: { type: String },
+        active: { type: Boolean }
+      }]
     }
   },
   premiumSettings: {
@@ -118,10 +155,11 @@ const UserSchema: Schema = new Schema({
     profileEffect: { type: String, default: 'none' }
   },
   audit_logs: [{ type: Schema.Types.Mixed }],
-  status: { type: String, enum: ['active', 'banned'], default: 'active' },
+  status: { type: String, enum: ['active', 'banned', 'pending'], default: 'active' },
   isOnline: { type: Boolean, default: false },
   lastActive: { type: Date },
   isLive: { type: Boolean, default: false },
+  archetype: { type: String, default: 'OPERATOR' },
   streamTitle: { type: String, default: '' },
   peerId: { type: String, default: '' },
   streamDescription: { type: String, default: '' },
@@ -130,7 +168,8 @@ const UserSchema: Schema = new Schema({
   isAdmin: { type: Boolean, default: false },
   currency: { type: String, default: 'USD' },
   isEmailVerified: { type: Boolean, default: false },
-  verificationCode: { type: String },
+  verificationCode: { type: String, select: false },
+  verificationExpires: { type: Date, select: false },
   registeredTournaments: [{ type: Schema.Types.ObjectId, ref: 'Tournament' }],
   clanId: { type: String },
   clanRole: { type: String, enum: ['leader', 'officer', 'member'] },
@@ -142,6 +181,9 @@ const UserSchema: Schema = new Schema({
     banner: { type: String },
     animation: { type: String },
     effect: { type: String },
+    fontFamily: { type: String },
+    fontUrl: { type: String },
+    profileEffect: { type: String },
     colors: {
       primary: { type: String },
       secondary: { type: String },

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ITheme extends Document {
     name: string;
-    type: 'banner' | 'animation' | 'effect' | 'bundle';
+    type: 'banner' | 'animation' | 'effect' | 'font' | 'profile' | 'bundle';
     price: number;
     description: string;
     previewUrl: string;
@@ -10,6 +10,9 @@ export interface ITheme extends Document {
         bannerUrl?: string;
         animationClass?: string;
         customCSS?: string;
+        fontFamily?: string;
+        fontUrl?: string;
+        profileEffect?: string;
         colors?: {
             primary?: string;
             secondary?: string;
@@ -23,7 +26,7 @@ export interface ITheme extends Document {
 
 const ThemeSchema: Schema = new Schema({
     name: { type: String, required: true },
-    type: { type: String, enum: ['banner', 'animation', 'effect', 'bundle'], required: true },
+    type: { type: String, enum: ['banner', 'animation', 'effect', 'font', 'profile', 'bundle'], required: true },
     price: { type: Number, required: true },
     description: { type: String },
     previewUrl: { type: String },
@@ -31,6 +34,9 @@ const ThemeSchema: Schema = new Schema({
         bannerUrl: { type: String },
         animationClass: { type: String },
         customCSS: { type: String },
+        fontFamily: { type: String },
+        fontUrl: { type: String },
+        profileEffect: { type: String },
         colors: {
             primary: { type: String },
             secondary: { type: String },

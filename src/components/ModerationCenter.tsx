@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getIcon } from '../constants';
+import { backendService } from '../services/backendService';
 
 interface Report {
     _id: string;
@@ -30,11 +31,12 @@ const ModerationCenter: React.FC = () => {
     const fetchReports = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/admin/reports');
-            const data = await response.json();
-            setReports(data);
+            // Updated to use secure backendService
+            const data = await backendService.getReports();
+            setReports(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Audit sync failure', err);
+            setReports([]); // Safe fallback to prevent crashes
         } finally {
             setLoading(false);
         }
@@ -48,22 +50,16 @@ const ModerationCenter: React.FC = () => {
         if (!selectedReport || processing) return;
         setProcessing(true);
         try {
-            const response = await fetch('http://localhost:5000/api/admin/resolve-report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    reportId: selectedReport._id,
-                    action,
-                    adminNotes: resolveData.adminNotes,
-                    banReason: action === 'BAN' ? (resolveData.banReason || selectedReport.reason) : undefined
-                })
-            });
+            await backendService.resolveReport(
+                selectedReport._id,
+                action,
+                resolveData.adminNotes,
+                action === 'BAN' ? (resolveData.banReason || selectedReport.reason) : undefined
+            );
 
-            if (response.ok) {
-                fetchReports();
-                setSelectedReport(null);
-                setResolveData({ adminNotes: '', banReason: '' });
-            }
+            fetchReports();
+            setSelectedReport(null);
+            setResolveData({ adminNotes: '', banReason: '' });
         } catch (err) {
             console.error('Action execution failure', err);
         } finally {

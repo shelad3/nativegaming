@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { Message } from '../models/Message';
 import Conversation from '../models/Conversation';
 import { Notification } from '../models/Notification';
@@ -11,15 +12,19 @@ router.get('/conversations', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Identity required' });
 
     try {
+        console.log(`[MESSAGES] Fetching conversations for user: ${userId}`);
+        const userObjectId = new mongoose.Types.ObjectId(userId);
         const conversations = await Conversation.find({
-            participants: userId
+            participants: { $in: [userObjectId, userId] }
         })
             .populate('participants', 'username avatar status')
             .populate('lastMessage')
             .sort({ lastActivity: -1 });
 
+        console.log(`[MESSAGES] Found ${conversations.length} conversations`);
         res.json(conversations);
     } catch (err) {
+        console.error('[MESSAGES] Error fetching conversations:', err);
         res.status(500).json({ error: 'Failed to fetch conversations' });
     }
 });
@@ -44,13 +49,19 @@ router.post('/', async (req, res) => {
 
         // If it's a private message, handle conversation association
         if (receiverId && !streamId && !clanId) {
+            const senderObjId = new mongoose.Types.ObjectId(senderId);
+            const receiverObjId = new mongoose.Types.ObjectId(receiverId);
             let conversation = await Conversation.findOne({
-                participants: { $all: [senderId, receiverId], $size: 2 }
+                $and: [
+                    { participants: { $in: [senderObjId, senderId] } },
+                    { participants: { $in: [receiverObjId, receiverId] } }
+                ],
+                participants: { $size: 2 }
             });
 
             if (!conversation) {
                 conversation = await Conversation.create({
-                    participants: [senderId, receiverId],
+                    participants: [senderObjId, receiverObjId],
                     unreadCounts: new Map([[receiverId, 0], [senderId, 0]])
                 });
             }

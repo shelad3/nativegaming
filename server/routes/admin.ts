@@ -4,13 +4,13 @@ import Report from '../models/Report';
 import Post from '../models/Post';
 import Media from '../models/Media';
 import ForumThread from '../models/ForumThread';
-import { adminAuth } from '../middleware/authMiddleware';
+import { adminAuth, protect } from '../middleware/authMiddleware';
 import { logActivity } from '../services/gamificationService';
 
 const router = express.Router();
 
 // Admin: Get all users
-router.get('/users', adminAuth, async (req, res) => {
+router.get('/users', protect, adminAuth, async (req, res) => {
     try {
         const users = await User.find();
         res.json(users);
@@ -20,7 +20,7 @@ router.get('/users', adminAuth, async (req, res) => {
 });
 
 // Admin: Update user status
-router.patch('/users/:id/status', adminAuth, async (req, res) => {
+router.patch('/users/:id/status', protect, adminAuth, async (req, res) => {
     const { status } = req.body;
     try {
         const user = await User.findByIdAndUpdate(req.params.id, { status }, { new: true });
@@ -31,7 +31,7 @@ router.patch('/users/:id/status', adminAuth, async (req, res) => {
 });
 
 // Admin: Get metrics
-router.get('/metrics', adminAuth, async (req, res) => {
+router.get('/metrics', protect, adminAuth, async (req, res) => {
     try {
         const usersCount = await User.countDocuments();
         const premiumUsers = await User.countDocuments({ tier: 'PREMIUM' });
@@ -80,7 +80,7 @@ router.post('/reports', async (req, res) => {
 });
 
 // Admin: Get all reports
-router.get('/reports', adminAuth, async (req, res) => {
+router.get('/reports', protect, adminAuth, async (req, res) => {
     try {
         const reports = await Report.find()
             .sort({ createdAt: -1 })
@@ -92,7 +92,7 @@ router.get('/reports', adminAuth, async (req, res) => {
 });
 
 // Admin: Resolve report & Enforcement
-router.post('/resolve-report', adminAuth, async (req, res) => {
+router.post('/resolve-report', protect, adminAuth, async (req, res) => {
     const { reportId, action, adminNotes, banReason } = req.body; // action: 'BAN' | 'DISMISS'
     try {
         const report = await Report.findById(reportId);

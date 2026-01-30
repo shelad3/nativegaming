@@ -18,7 +18,7 @@ const ActivitySchema: Schema = new Schema({
     type: {
         type: String,
         required: true,
-        enum: ['THREAD_CREATED', 'POST_CREATED', 'CLAN_JOINED', 'FOLLOW_STARTED', 'ACHIEVEMENT_UNLOCKED', 'MEDIA_CREATED']
+        enum: ['THREAD_CREATED', 'POST_CREATED', 'CLAN_JOINED', 'FOLLOW_STARTED', 'ACHIEVEMENT_UNLOCKED', 'MEDIA_CREATED', 'THEME_PURCHASED']
     },
     metadata: {
         targetId: { type: String },

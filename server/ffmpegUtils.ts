@@ -25,3 +25,23 @@ export const extractClip = (inputPath: string, outputPath: string, start: string
             .run();
     });
 };
+
+export const generateThumbnail = (inputPath: string, outputPath: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+            .screenshots({
+                timestamps: ['00:00:01'],
+                filename: path.basename(outputPath),
+                folder: path.dirname(outputPath),
+                size: '1280x720'
+            })
+            .on('end', () => {
+                console.log(`[FFMPEG] Thumbnail generated: ${outputPath}`);
+                resolve(outputPath);
+            })
+            .on('error', (err) => {
+                console.error(`[FFMPEG] Thumbnail generation failed: ${err.message}`);
+                reject(err);
+            });
+    });
+};

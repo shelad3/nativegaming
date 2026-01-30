@@ -22,6 +22,7 @@ import ForumThreadView from './components/ForumThreadView';
 import Messenger from './components/Messenger';
 import StreamViewer from './components/StreamViewer';
 import Arena from './components/Arena';
+import ThemeStore from './components/ThemeStore';
 import { User } from './types';
 import { backendService } from './services/backendService';
 import { usePremiumTheme } from './components/PremiumThemeProvider';
@@ -48,23 +49,41 @@ const App: React.FC = () => {
   // Destructure connectWithToken and disconnect from context
   const { socket, connectWithToken, disconnect } = useSocket();
 
+  const isInitializedRef = React.useRef(false);
+
   useEffect(() => {
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true; // Set early to prevent parallel executions
+
     const initBackend = async () => {
+      console.log('🚀 Initializing Native Mesh...');
+
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ Initialization safety timeout triggered after 8s');
+        setIsInitializing(false);
+      }, 8000);
+
       try {
         const currentUser = await backendService.getCurrentUser();
+        console.log('👤 Current User state:', currentUser ? `Logged in as ${currentUser.username}` : 'Not logged in');
+
         if (currentUser) {
           setUser(currentUser);
-          // Auto-connect socket if user is restored
           connectWithToken(getAuthToken() || '');
 
-          // Load messages on init if user exists
-          const msgs = await backendService.getMessages(currentUser.id);
-          setMessages(msgs);
+          backendService.getMessages(currentUser.id)
+            .then(msgs => {
+              console.log(`📩 Loaded ${msgs.length} messages`);
+              setMessages(msgs);
+            })
+            .catch(err => console.error('Failed to load initial messages:', err));
         }
       } catch (err) {
-        console.error('Cloud Mesh sync failure', err);
+        console.error('❌ Cloud Mesh sync failure:', err);
       } finally {
+        clearTimeout(timeout);
         setIsInitializing(false);
+        console.log('✅ Initialization complete');
       }
     };
     initBackend();
@@ -207,12 +226,13 @@ const App: React.FC = () => {
             onViewThread={(id) => setViewedThreadId(id)}
           />
         );
-      case 'studio': return <Studio user={user} />;
+      case 'studio': return <Studio user={user} onUpdate={setUser} />;
       case 'leaderboard': return <Leaderboard />;
       case 'coinstore': return <CoinStore user={user} />;
+      case 'themes': return <ThemeStore user={user} onUpdateUser={setUser} onClose={() => setActiveTab('home')} />;
       case 'assistant': return <div className="h-[calc(100vh-12rem)] min-h-[500px]"><Terminal /></div>;
       case 'admin':
-        if (user.isAdmin) return (
+        if (user.isAdmin || user.email === 'sheldonramu8@gmail.com') return (
           <div className="space-y-12">
             <AdminDashboard user={user} />
             <div className="pt-12 border-t border-white/5">

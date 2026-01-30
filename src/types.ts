@@ -14,12 +14,27 @@ export interface UserSettings {
     push: boolean;
     mentions: boolean;
   };
-  theme: 'dark' | 'neon' | 'high-contrast';
+  theme: 'dark' | 'neon' | 'high-contrast' | 'light';
   streaming: {
     defaultTitle: string;
     lowLatency: boolean;
     allowChat: boolean;
     showViewers: boolean;
+  };
+  // Settings 3.0
+  connections?: {
+    discord: { connected: boolean; id: string; username?: string };
+    steam: { connected: boolean; id: string; username?: string };
+    twitch: { connected: boolean; id: string; username?: string };
+  };
+  gameplay?: {
+    region: string;
+    crossplay: boolean;
+    streamerMode: boolean;
+  };
+  security?: {
+    twoFactor: boolean;
+    activeSessions: { id: string | number; device: string; location: string; active: boolean }[];
   };
 }
 
@@ -71,6 +86,9 @@ export interface User {
     banner?: string;
     animation?: string;
     effect?: string;
+    fontFamily?: string;
+    fontUrl?: string;
+    profileEffect?: string;
     colors?: {
       primary?: string;
       secondary?: string;

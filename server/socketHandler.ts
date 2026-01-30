@@ -50,8 +50,11 @@ export const initializeSocket = (io: Server) => {
             console.log(`[SOCKET] Socket ${socket.id} joined stream ${streamId}`);
         });
 
-        socket.on('join_clan', (clanId: string) => {
+        socket.on('join_clan', async (clanId: string) => {
             socket.join(`clan_${clanId}`);
+            if (userId) {
+                io.to(`clan_${clanId}`).emit('clan_member_status', { userId, status: 'online' });
+            }
         });
 
         socket.on('join_conversation', (conversationId: string) => {
@@ -69,6 +72,14 @@ export const initializeSocket = (io: Server) => {
             const { streamId, conversationId, username } = data;
             if (streamId) socket.to(streamId).emit('user_typing_update', { username, isTyping: false });
             if (conversationId) socket.to(conversationId).emit('dm_typing_update', { username, isTyping: false, conversationId });
+        });
+
+        // Read Receipts
+        socket.on('message_read', async (data: any) => {
+            const { conversationId, readerId } = data;
+            if (conversationId) {
+                socket.to(conversationId).emit('read_receipt_update', { conversationId, readerId });
+            }
         });
 
         // Chat Message Handling (If using socket directly instead of API)

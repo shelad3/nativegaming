@@ -124,13 +124,62 @@ async function seed() {
         const createdPosts = await Post.insertMany(postsWithIds);
         console.log(`Successfully seeded ${createdPosts.length} posts.`);
 
+        // Insert Media (Clips)
+        const MEDIA = [
+            {
+                userId: createdUsers[0]._id,
+                type: 'CLIP',
+                title: 'Tactical Wipeout',
+                url: 'https://vjs.zencdn.net/v/oceans.mp4',
+                thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800',
+                game: 'CS2',
+                stats: { views: 1200, likes: [createdUsers[1]._id.toString()], gifts: 50 },
+                status: 'ready'
+            },
+            {
+                userId: createdUsers[1]._id,
+                type: 'CLIP',
+                title: 'High Ground Protocol',
+                url: 'https://vjs.zencdn.net/v/oceans.mp4',
+                thumbnail: 'https://images.unsplash.com/photo-1627850604058-52e40de1b8d7?auto=format&fit=crop&q=80&w=800',
+                game: 'Apex Legends',
+                stats: { views: 800, likes: [], gifts: 0 },
+                status: 'ready'
+            }
+        ];
+        const createdMedia = await Media.insertMany(MEDIA);
+        console.log(`Successfully seeded ${createdMedia.length} media items.`);
+
+        // Insert Activities
+        const Activity = (await import('./models/Activity.ts')).default;
+        const ACTIVITIES = [
+            {
+                userId: createdUsers[0]._id,
+                type: 'POST_CREATED',
+                metadata: { targetId: createdPosts[0]._id, targetName: createdPosts[0].title }
+            },
+            {
+                userId: createdUsers[1]._id,
+                type: 'MEDIA_CREATED',
+                metadata: { targetId: createdMedia[1]._id, targetName: createdMedia[1].title, mediaType: 'clip' }
+            },
+            {
+                userId: createdUsers[2]._id,
+                type: 'ACHIEVEMENT_UNLOCKED',
+                metadata: { badgeName: 'Early Adopter', badgeType: 'EARLY_ADOPTER' }
+            }
+        ];
+        await Activity.insertMany(ACTIVITIES);
+        console.log(`Successfully seeded activities.`);
+
         console.log('--- SEED OPERATION COMPLETE ---');
-        process.exit(0);
     } catch (err) {
         console.error('Seed operation failed:', err);
-        process.exit(1);
+        throw err;
     }
 }
+
+import Media from './models/Media.ts';
 
 // Economy Seeding Data
 import MarketItem from './models/MarketItem.ts';
@@ -152,34 +201,115 @@ const TIERS = [
 
 const THEMES = [
     {
-        name: 'Neon Grid',
+        name: 'Midnight Nebula',
         type: 'banner',
-        price: 500,
-        description: 'Retro-futuristic tactical grid background.',
-        previewUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b25272a7?auto=format&fit=crop&q=80&w=300&h=200',
-        assets: { bannerUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b25272a7?auto=format&fit=crop&q=80&w=1200' },
+        price: 400,
+        description: 'Deep space gradient banner with subtle nebula motion feel.',
+        previewUrl: 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&q=80&w=300&h=200',
+        assets: {
+            bannerUrl: 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&q=80&w=1600',
+            colors: { primary: '#5865F2', secondary: '#0b1020', accent: '#99AAB5' }
+        },
         rarity: 'Common'
     },
     {
-        name: 'Matrix Pulse',
+        name: 'Neon Grid',
+        type: 'banner',
+        price: 500,
+        description: 'Retro-futuristic tactical grid background with high-energy pink accents.',
+        previewUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b25272a7?auto=format&fit=crop&q=80&w=300&h=200',
+        assets: {
+            bannerUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b25272a7?auto=format&fit=crop&q=80&w=1600',
+            colors: { primary: '#ff00ff', secondary: '#050005', accent: '#ff00aa' }
+        },
+        rarity: 'Common'
+    },
+    {
+        name: 'Glass Pulse',
         type: 'animation',
-        price: 1500,
-        description: 'Subtle digital pulse effect for your profile nodes.',
-        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=pulse',
-        assets: { animationClass: 'animate-pulse' },
+        price: 1200,
+        description: 'A clean glass-panel pulse on UI highlights and cards.',
+        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=glasspulse',
+        assets: {
+            animationClass: 'discord-pulse'
+        },
         rarity: 'Rare'
+    },
+    {
+        name: 'Matrix Overlay',
+        type: 'profile',
+        price: 900,
+        description: 'Digital matrix overlay profile effect (subtle grid + green tint).',
+        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=matrix',
+        assets: {
+            profileEffect: 'matrix'
+        },
+        rarity: 'Rare'
+    },
+    {
+        name: 'Inter UI Font',
+        type: 'font',
+        price: 600,
+        description: 'Clean modern UI font used in many Discord-like layouts.',
+        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=inter',
+        assets: {
+            fontFamily: 'Inter',
+            fontUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'
+        },
+        rarity: 'Common'
+    },
+    {
+        name: 'JetBrains Mono',
+        type: 'font',
+        price: 800,
+        description: 'Monospace operator font for code-heavy interfaces.',
+        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=jbmono',
+        assets: {
+            fontFamily: 'JetBrains Mono',
+            fontUrl: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap'
+        },
+        rarity: 'Rare'
+    },
+    {
+        name: 'Glass Bloom',
+        type: 'effect',
+        price: 1400,
+        description: 'Adds a soft bloom/glow around primary elements and cards.',
+        previewUrl: 'https://api.dicebear.com/7.x/shapes/svg?seed=bloom',
+        assets: {
+            customCSS: "[data-theme=dark] .glass-card{box-shadow:0 0 60px rgba(88,101,242,.08);} .text-glow{text-shadow:0 0 24px var(--glow-primary);}"
+        },
+        rarity: 'Epic'
     },
     {
         name: 'Shadow Nexus',
         type: 'bundle',
-        price: 3000,
-        description: 'Full stealth kit with banner and custom color scheme.',
+        price: 3200,
+        description: 'Full stealth kit: banner + colors + pulse + matrix + font.',
         previewUrl: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=300&h=200',
         assets: {
-            bannerUrl: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=1200',
+            bannerUrl: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?auto=format&fit=crop&q=80&w=1600',
+            animationClass: 'discord-pulse',
+            profileEffect: 'matrix',
+            fontFamily: 'Inter',
+            fontUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
             colors: { primary: '#10b981', secondary: '#064e3b', accent: '#34d399' }
         },
         rarity: 'Legendary'
+    },
+    {
+        name: 'Solar Flare',
+        type: 'bundle',
+        price: 2600,
+        description: 'Intense amber aesthetics for high-rank operators.',
+        previewUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=300&h=200',
+        assets: {
+            bannerUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1600',
+            fontFamily: 'Inter',
+            fontUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
+            colors: { primary: '#f59e0b', secondary: '#451a03', accent: '#fbbf24' }
+        },
+        rarity: 'Epic'
     }
 ];
 
@@ -219,7 +349,13 @@ async function seedEconomy() {
 
 // Run both
 (async () => {
-    await seed();
-    await seedEconomy();
-    process.exit(0);
+    try {
+        await seed();
+        await seedEconomy();
+        console.log('✅ All synchronization operations completed successfully.');
+        process.exit(0);
+    } catch (err) {
+        console.error('❌ Synchronization failed:', err);
+        process.exit(1);
+    }
 })();

@@ -21,16 +21,34 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const lastTokenRef = React.useRef<string | null | undefined>(undefined);
+    const socketRef = React.useRef<Socket | null>(null);
 
     const initSocket = useCallback((token?: string | null) => {
-        const SOCKET_URL = 'http://localhost:5000';
-        const fetchedToken = token || getAuthToken();
+        const getSocketUrl = () => {
+            if (typeof window !== 'undefined') {
+                return `http://${window.location.hostname}:5000`;
+            }
+            return 'http://localhost:5000';
+        };
+
+        const SOCKET_URL = getSocketUrl();
+        const fetchedToken = token !== undefined ? token : getAuthToken();
+
+        // ONLY RECONNECT IF TOKEN HAS CHANGED
+        if (lastTokenRef.current === fetchedToken && socketRef.current) {
+            console.log('[SOCKET] Token unchanged, skipping re-init');
+            return;
+        }
+
+        console.log('[SOCKET] Initializing with token:', fetchedToken ? 'EXISTS' : 'NONE');
+        lastTokenRef.current = fetchedToken;
 
         const socketInstance = io(SOCKET_URL, {
             transports: ['websocket'],
             autoConnect: true,
             auth: {
-                token: fetchedToken // Pass token here
+                token: fetchedToken
             }
         });
 
@@ -44,19 +62,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setIsConnected(false);
         });
 
-        // Log errors to debug auth failures
         socketInstance.on('connect_error', (err) => {
             console.error('Socket Connection Error:', err.message);
         });
 
         setSocket((prev) => {
-            if (prev) prev.disconnect();
+            if (prev) {
+                console.log('[SOCKET] Disconnecting previous instance');
+                prev.disconnect();
+            }
+            socketRef.current = socketInstance;
             return socketInstance;
         });
-    }, []);
+    }, []); // Removed socket dependency to break the circle
 
     useEffect(() => {
-        // Initial connection (guest or stored token)
         initSocket();
 
         return () => {
@@ -65,22 +85,30 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 return null;
             });
         };
+    }, []); // Run only once on mount
+
+    const connectWithToken = useCallback((token: string) => {
+        initSocket(token);
     }, [initSocket]);
 
-    const connectWithToken = (token: string) => {
-        initSocket(token);
-    };
-
-    const disconnect = () => {
+    const disconnect = useCallback(() => {
+        lastTokenRef.current = undefined;
         setSocket((prev) => {
             if (prev) prev.disconnect();
             return null;
         });
         setIsConnected(false);
-    };
+    }, []);
+
+    const contextValue = React.useMemo(() => ({
+        socket,
+        isConnected,
+        connectWithToken,
+        disconnect
+    }), [socket, isConnected, connectWithToken, disconnect]);
 
     return (
-        <SocketContext.Provider value={{ socket, isConnected, connectWithToken, disconnect }}>
+        <SocketContext.Provider value={contextValue}>
             {children}
         </SocketContext.Provider>
     );

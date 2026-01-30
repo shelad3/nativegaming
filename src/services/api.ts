@@ -1,6 +1,19 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const getServerUrl = () => {
+    // If we have an environment variable for the API URL, use it (recommended for production)
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        return `http://${hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getServerUrl();
 const AUTH_TOKEN_KEY = 'native_codex_auth_token';
 
 export const api = axios.create({

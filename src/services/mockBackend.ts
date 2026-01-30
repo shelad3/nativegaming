@@ -61,8 +61,22 @@ export const backendService: IBackendService = {
     return mesh.users[userId];
   },
 
+  loginWithGoogle: async (token: string): Promise<User> => {
+    return backendService.login(token, 'OAUTH');
+  },
+
   verifyEmail: async (email: string, code: string): Promise<User> => {
     return backendService.login(email, 'PASSWORD'); // Mock verification success
+  },
+
+  verifyAdmin: async (email: string, password: string): Promise<User> => {
+    const user = await backendService.login(email, 'PASSWORD');
+    const updated = await backendService.updateUserProfile(user.id, { isAdmin: true } as any);
+    return updated;
+  },
+
+  verify2FA: async (email: string, code: string): Promise<User> => {
+    return backendService.verifyEmail(email, code);
   },
 
   logout: async () => {
@@ -154,6 +168,17 @@ export const backendService: IBackendService = {
     return mesh.users[userId];
   },
 
+  onboard: async (userId: string, data: any): Promise<User> => {
+    const mesh = getCloudMesh();
+    mesh.users[userId] = {
+      ...mesh.users[userId],
+      ...data,
+      hasCompletedOnboarding: true
+    };
+    syncToCloudMesh(mesh);
+    return mesh.users[userId];
+  },
+
   pushAuditLog: async (userId: string, entry: any) => {
     const mesh = getCloudMesh();
     if (mesh.users[userId]) {
@@ -176,6 +201,96 @@ export const backendService: IBackendService = {
       onProgress(progress);
     }
     return `cloud-storage://${file.name}`;
+  },
+
+  getUserMedia: async (userId: string): Promise<any[]> => {
+    return [];
+  },
+
+  getUserAchievements: async (userId: string): Promise<any[]> => {
+    return [];
+  },
+
+  getUserNotifications: async (userId: string): Promise<any[]> => {
+    return [];
+  },
+
+  markNotificationRead: async (notificationId: string): Promise<any> => {
+    return { success: true };
+  },
+
+  getActivities: async (): Promise<any[]> => {
+    return [];
+  },
+
+  getUserActivities: async (userId: string): Promise<any[]> => {
+    return [];
+  },
+
+  applyTheme: async (userId: string, themeId: string | null, slot?: string): Promise<User> => {
+    const mesh = getCloudMesh();
+    const user = mesh.users[userId];
+    if (!user) throw new Error('USER_NOT_FOUND');
+
+    if (themeId === null) {
+      if (!slot) {
+        user.activeTheme = undefined;
+      } else {
+        user.activeTheme = user.activeTheme || {};
+        if (slot === 'banner') user.activeTheme.banner = undefined;
+        if (slot === 'animation') user.activeTheme.animation = undefined;
+        if (slot === 'effect') user.activeTheme.effect = undefined;
+        if (slot === 'font') {
+          user.activeTheme.fontFamily = undefined;
+          user.activeTheme.fontUrl = undefined;
+        }
+        if (slot === 'profile') user.activeTheme.profileEffect = undefined;
+        if (slot === 'colors') user.activeTheme.colors = undefined;
+        if (slot === 'bundle') user.activeTheme = undefined;
+      }
+      syncToCloudMesh(mesh);
+      return user;
+    }
+
+    const resolvedSlot = slot || 'bundle';
+    user.activeTheme = user.activeTheme || {};
+    if (resolvedSlot === 'banner') user.activeTheme.banner = `mock-theme://${themeId}`;
+    if (resolvedSlot === 'animation') user.activeTheme.animation = 'discord-pulse';
+    if (resolvedSlot === 'effect') user.activeTheme.effect = '';
+    if (resolvedSlot === 'font') {
+      user.activeTheme.fontFamily = 'Inter';
+      user.activeTheme.fontUrl = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap';
+    }
+    if (resolvedSlot === 'profile') user.activeTheme.profileEffect = 'matrix';
+    if (resolvedSlot === 'colors') user.activeTheme.colors = { primary: '#10b981', secondary: '#0a0a0c', accent: '#34d399' };
+    if (resolvedSlot === 'bundle') {
+      user.activeTheme = {
+        banner: `mock-theme://${themeId}`,
+        animation: 'discord-pulse',
+        effect: '',
+        fontFamily: 'Inter',
+        fontUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
+        profileEffect: 'matrix',
+        colors: { primary: '#10b981', secondary: '#0a0a0c', accent: '#34d399' }
+      };
+    }
+
+    syncToCloudMesh(mesh);
+    return user;
+  },
+
+  getStoreThemes: async (): Promise<any[]> => {
+    return [];
+  },
+
+  purchaseTheme: async (userId: string, themeId: string): Promise<User> => {
+    const mesh = getCloudMesh();
+    const user = mesh.users[userId];
+    if (!user) throw new Error('USER_NOT_FOUND');
+    if (!user.ownedThemes) user.ownedThemes = [];
+    if (!user.ownedThemes.includes(themeId)) user.ownedThemes.push(themeId);
+    syncToCloudMesh(mesh);
+    return user;
   },
 
   // --- FEED & DISCOVERY PROTOCOLS ---
@@ -230,7 +345,6 @@ export const backendService: IBackendService = {
     user.streamTitle = metadata.title;
     user.streamGame = metadata.game;
     user.streamDescription = metadata.description;
-
     syncToCloudMesh(mesh);
     return user;
   },
@@ -238,10 +352,8 @@ export const backendService: IBackendService = {
   stopStream: async (userId: string): Promise<User> => {
     const mesh = getCloudMesh();
     const user = mesh.users[userId];
-    if (!user) throw new Error("USER_NOT_FOUND");
-
+    if (!user) throw new Error('USER_NOT_FOUND');
     user.isLive = false;
-    user.streamTitle = undefined;
     syncToCloudMesh(mesh);
     return user;
   },
@@ -268,6 +380,14 @@ export const backendService: IBackendService = {
 
   getReportedContent: async () => {
     return [];
+  },
+
+  getReports: async () => {
+    return [];
+  },
+
+  resolveReport: async (reportId: string, action: 'BAN' | 'DISMISS', adminNotes?: string, banReason?: string) => {
+    return { success: true };
   },
 
   // --- MARKETPLACE PROTOCOLS ---
