@@ -2,6 +2,12 @@
 builder = "NIXPACKS"
 buildCommand = "npm run build"
 
+[nixpacks]
+providers = ["node"]
+
+[nixpacks.phases.setup]
+nixPkgs = ["nodejs_22"]
+
 [deploy]
 startCommand = "npm run server"
 restartPolicyType = "ON_FAILURE"
