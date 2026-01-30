@@ -182,10 +182,24 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
 });
 */
 
-// Basic Health Check
-app.get('/', (req, res) => {
-    res.send('NativeCodeX Coordinates Received. System Online.');
-});
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+    const distPath = path.join(__dirname, '../dist');
+    app.use(express.static(distPath));
+
+    // Handle React routing, return all unknown requests to React app
+    app.get('*', (req, res) => {
+        if (req.path.startsWith('/api')) {
+            return res.status(404).json({ error: 'API endpoint not found' });
+        }
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+} else {
+    // Basic Health Check for Development
+    app.get('/', (req, res) => {
+        res.send('NativeCodeX Coordinates Received. System Online (Dev Mode).');
+    });
+}
 
 // Error Handling Middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
