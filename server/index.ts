@@ -98,9 +98,15 @@ if (!MONGODB_URI) {
     console.error('❌ MONGODB_URI is required');
     process.exit(1);
 }
-mongoose.connect(MONGODB_URI)
+mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+})
     .then(() => console.log('✅ Connected to MongoDB at', MONGODB_URI.split('@').pop()))
-    .catch(err => console.error('❌ MongoDB connection error:', err));
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err.message);
+        console.error('⚠️ Server will start but API endpoints requiring DB will fail until connection is established.');
+    });
 
 // Socket.IO Setup
 const io = new Server(httpServer, {
