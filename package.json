@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "npm run server",
     "server": "tsx server/index.ts",
     "dev:server": "tsx watch server/index.ts",
     "seed": "tsx server/seed.ts",
@@ -33,6 +34,7 @@
     "jsonwebtoken": "^9.0.3",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.562.0",
+    "mongodb": "^7.0.0",
     "mongoose": "^7.5.2",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
